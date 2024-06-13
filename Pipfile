@@ -13,6 +13,8 @@ django-cors-headers = "*"
 django-filter = "*"
 requests = "*"
 bcrypt = "*"
+twilio = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pytest = "*"
