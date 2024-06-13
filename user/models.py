@@ -47,18 +47,21 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     """Base user class for authentication"""
     GENDER_CHOICES = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Others', 'Others')
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Others')
     ]
     username = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
     phone_number = models.CharField(max_length=30, unique=True, db_index=True)
     gender = models.CharField(max_length=50, choices=GENDER_CHOICES, null=True)
-    profile_picture = models.ImageField(upload_to='files/dp')
+    profile_picture = models.ImageField(upload_to='files/dp', null=True, blank=True)
     location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
     groups = models.ManyToManyField(Group, blank=True, related_name='user_groups')
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name='user_user_permissions')
+    phone_verified = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
     
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ['phone_number']
@@ -67,18 +70,6 @@ class CustomUser(AbstractUser):
     
     def __str__(self) -> str:
         return self.email
-    
-
-class ErrandBoy(models.Model):
-    """An errand messanger for user task"""
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="errand_boy")
-    mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Bicycle')
-    charges = models.IntegerField(default=0)
-    documents = models.OneToOneField('main.Document', on_delete=models.CASCADE, related_name='errand_documents', default=None)
-    
-    def __str__(self) -> str:
-        return f"Gofer {self.user.username}"
-    
 
 
 class Gofer(models.Model):
@@ -88,10 +79,10 @@ class Gofer(models.Model):
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    documents = models.OneToOneField('main.Document', on_delete=models.CASCADE, related_name='gofer_documents', default=None)
+    is_on_contract = models.BooleanField(default=False)
     
     def __str__(self) -> str:
-        return f"Gofer {self.user.username}"
+        return f"Gofer {self.user.first_name}"
     
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
@@ -99,7 +90,6 @@ class Vendor(models.Model):
     category = models.OneToOneField('main.Category', on_delete=models.CASCADE, related_name='vendor_category')
     website = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    documents = models.OneToOneField('main.Document', on_delete=models.CASCADE, related_name='vendor_documents')
     
     # SOCIAL LINKS
     facebook = models.URLField(blank=True, null=True)
@@ -138,3 +128,22 @@ class Errand(models.Model):
 
     def __str__(self):
         return f'{self.gofer.username}'
+    
+
+class ErrandBoy(models.Model):
+    """An errand messanger for user task"""
+    MOBILILTY_CHOICES = [
+    ('Bicycle', 'Bicycle'),
+    ('Motorcycle', 'Motorcycle'),
+    ('Car', 'Car'),
+    ('Truck', 'Truck'),
+    ('Van', 'Van'),
+    ('Bus', 'Bus'),
+    ('Other', 'Other')
+]
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="errand_boy")
+    mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Bicycle')
+    charges = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return f"Errandboy {self.user.first_name}"
