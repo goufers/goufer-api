@@ -10,11 +10,8 @@ router.register('location', LocationViewSet, basename='location')
 
 
 # Child routers
-collection_router = routers.NestedDefaultRouter(router, 'categories', lookup='category')
-collection_router.register('subcategory', SubCategoryViewSet, basename='category_subcategory')
+category_router = routers.NestedDefaultRouter(router, 'categories', lookup='category')
+category_router.register('subcategory', SubCategoryViewSet, basename='category_subcategory')
 
 
-
-
-
-urlpatterns = router.urls + collection_router.urls
+urlpatterns = router.urls + category_router.urls
