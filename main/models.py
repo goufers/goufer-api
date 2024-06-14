@@ -45,8 +45,9 @@ class SubCategory(models.Model):
         return self.name
     
 class Document(models.Model):
+    
     DOCUMENT_CHOICES = (
-        ('bvn', 'BVN'),
+        ('ssn', 'SSN'),
         ('nin', 'NIN')
     )
     
