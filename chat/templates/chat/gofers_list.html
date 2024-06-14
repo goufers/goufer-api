@@ -1,0 +1,51 @@
+{% extends 'chat/index.html' %}
+{% block title %} All Gofers | {% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-r from-teal-500 to-teal-800 flex flex-col items-center justify-center p-10 lg:p-20">
+    <!-- Display logged-in user's name -->
+    <div class="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden mb-6">
+        <div class="bg-teal-600 text-white text-center p-4 lg:p-6">
+            <p class="text-xl lg:text-2xl">Logged in as: User {{ user.username }} </p>
+        </div>
+    </div>
+    
+    <div class="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-teal-600 text-white text-center p-6 lg:p-10">
+            <h1 class="text-3xl lg:text-5xl font-bold">This is the gofers list</h1>
+        </div>
+        <div class="p-6 lg:p-10">
+            {% for gofer in gofers %}
+                <div class="flex items-center py-4">
+                    <span class="inline-block w-2.5 h-2.5 bg-teal-500 rounded-full mr-4"></span>
+                    <p class="text-xl text-gray-700">
+                        <a href="{% url 'create_chat_room' gofer.id %}" class="text-teal-500 hover:underline">{{ gofer.first_name }} {{ gofer.last_name }}</a>
+                    </p>
+                </div>
+                {% if not loop.last %}
+                    <hr class="border-gray-300">
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-teal-600 text-white text-center p-6 lg:p-10">
+            <h1 class="text-3xl lg:text-5xl font-bold">Continue chatting...</h1>
+        </div>
+        <div class="p-6 lg:p-10">
+            {% for chat_room in chat_rooms %}
+                <div class="flex items-center py-4">
+                    <span class="inline-block w-2.5 h-2.5 bg-teal-500 rounded-full mr-4"></span>
+                    <p class="text-xl text-gray-700">
+                        <a href="{% url 'create_chat_room' chat_room.user.id %}" class="text-teal-500 hover:underline">{{ chat_room }}</a>
+                    </p>
+                </div>
+                {% if not loop.last %}
+                    <hr class="border-gray-300">
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

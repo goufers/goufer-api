@@ -1,0 +1,74 @@
+{% extends 'chat/index.html' %}
+
+{% block title %} {{ chat_room.name }} | {% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">{{ chat_room.name }}</h1>
+    <div class="bg-white p-4 shadow-md rounded-lg">
+        <div id="messages" class="messages mb-4 h-96 overflow-y-auto">
+            {% for message in chat_room.chatmessage_set.all %}
+                <div class="message mb-2">
+                    <strong>{{ message.sender.first_name }}:</strong> {{ message.content }}
+                </div>
+            {% endfor %}
+        </div>
+        <textarea id="message-input" rows="3" class="w-full p-2 border rounded-lg"></textarea>
+        <button id="message-submit" class="mt-2 bg-teal-500 text-white py-2 px-4 rounded-lg">Send</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const roomID = {{ chat_room.id }};
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/api/v1/chat/chat-room/' + roomID + '/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            displayMessage(data.sender, data.message);
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+
+        function displayMessage(sender, message) {
+            const messageList = document.querySelector('#messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'mb-2');
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            messageList.appendChild(messageElement);
+            // Scroll to bottom of message list
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        document.querySelector('#message-input').focus();
+        document.querySelector('#message-input').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.querySelector('#message-submit').addEventListener('click', function(e) {
+            sendMessage();
+        });
+
+        function sendMessage() {
+            const messageInputDom = document.querySelector('#message-input');
+            const message = messageInputDom.value.trim();
+            if (message === '') {
+                return;
+            }
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'sender': "{{ request.user.username }}"
+            }));
+            messageInputDom.value = '';
+        }
+    });
+</script>
+{% endblock %}
