@@ -20,9 +20,7 @@ class CategoryViewSet(ModelViewSet):
         if self.request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
             return [IsAdminUser()]
         return [AllowAny()]
-    
-    
-    
+        
 class DocumentViewSet(ModelViewSet):
     serializer_class = DocumentSerializer
     pagination_class = CustomPagination

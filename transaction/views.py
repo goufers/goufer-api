@@ -125,10 +125,10 @@ class TransferFundsView(APIView):
     def post(self, request):
         serializer = TransferFundsSerializer(data=request.data)
         if serializer.is_valid():
-            recipient_username = serializer.validated_data['recipient']
+            recipient_email = serializer.validated_data['email']
             amount = serializer.validated_data['amount']
             sender_wallet = Wallet.objects.filter(user=request.user).first()
-            recipient = get_object_or_404(settings.AUTH_USER_MODEL, username=recipient_username) # Evaluates to either custom user, goufer or errandboy
+            recipient = get_object_or_404(settings.AUTH_USER_MODEL, email=recipient_email) # Evaluates to either custom user, goufer or errandboy
             recipient_wallet = Wallet.objects.filter(user=recipient).first()
 
             if sender_wallet.balance >= amount:

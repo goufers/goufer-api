@@ -5,10 +5,9 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from goufer import settings
-from .models import CustomUser, Gofer, Vendor
+from .models import CustomUser
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
-from rest_framework.renderers import BrowsableAPIRenderer, HTMLFormRenderer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -16,7 +15,7 @@ from main.serializers import LocationSerializer
 from .serializers import CustomUserSerializer, UpdateProfileSerializer
 from . import utils
 from .decorators import phone_verification_required, phone_unverified
-
+from transaction.models import Wallet
 
 
 @api_view(['POST'])
@@ -31,6 +30,8 @@ def register_user(request):
     serializer = CustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
+        wallet = Wallet.objects.create(user=user)
+        wallet.save()
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
