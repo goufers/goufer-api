@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from .models import CustomUser, Gofer, Vendor
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import CustomUser, Gofer, Vendor, ErrandBoy
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.conf import settings
+from main.serializers import DocumentSerializer
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -43,11 +51,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create_user(
             phone_number=validated_data['phone_number'],
             email=validated_data['email'],
+            password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name']
         )
-        user.set_password(validated_data['password'])
-        user.save()
         return user
     
 
@@ -59,7 +66,62 @@ class TokenPairSerializer(TokenObtainPairSerializer):
 
         return token
 
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            'gender', 'first_name', 'last_name', 'location'
+        ]
+
 class GoferSerializer(serializers.ModelSerializer):
+    documents = DocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
+        fields = "__all__"
+        
+class VendorSerializer(serializers.ModelSerializer):
+    documents = DocumentSerializer(many=True, read_only=True)
+    class Meta:
+        model = Vendor
+        fields = "__all__"
+        
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    
+    def validate_email(self, value):
+        try:
+            user = CustomUser.objects.get(email=value)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+    def save(self, request):
+        user = CustomUser.objects.get(email=self.validated_data['email'])
+        uid = urlsafe_base64_encode(str(user.pk).encode())
+        token = default_token_generator.make_token(user)
+        password_reset_url = request.build_absolute_uri(reverse('password_reset_confirm', kwargs={'uid': uid, 'token': token}))
+        subject = "Password Reset Request"
+        context = {
+            "user": user,
+            "reset_link": password_reset_url
+        }
+        message = render_to_string("user/password_reset_email.html", context=context)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        email.attach_alternative(message, "text/html")
+        email.send()
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True)
+
+
+class ErrandBoySerializer(serializers.ModelSerializer):
+    documents = DocumentSerializer(many=True, read_only=True)
+    class Meta:
+        model = ErrandBoy
         fields = "__all__"

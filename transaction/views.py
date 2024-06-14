@@ -2,21 +2,34 @@
 
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated, IsAdminUser,
+    IsAuthenticatedOrReadOnly
+    )
 from django.shortcuts import get_object_or_404
-from .models import Wallet, Transaction, Bank
-from .serializers import WalletSerializer, TransactionSerializer, BankSerializer, FundWalletSerializer, TransferFundsSerializer
+from .models import (
+    Wallet, Transaction, Bank, 
+    Hour, Day, Schedule
+    )
+from .serializers import (
+    WalletSerializer, TransactionSerializer, BankSerializer, 
+    FundWalletSerializer, TransferFundsSerializer,
+    HourSerializer, DaySerializer, ScheduleSerializer
+    )
 import requests
 from decimal import Decimal
 from django.conf import settings
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from user.models import CustomUser
+from django.db.models import Count
+
 
 paystack_secret_key = 'sk_test_58d7c6da2b1b3fb1c246d71e090cc18d76221624'
 
 
 class FundWalletView(APIView):
+    """Fund user wallet."""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -36,18 +49,18 @@ class FundWalletView(APIView):
             }
             response = requests.post(url, headers=headers, json=data)
             response_data = response.json()
-            print(response_data)
             if response_data['status']:
                 authorization_url = response_data['data']['authorization_url']
                 reference = response_data['data']['reference']
-                result = self.verify_payment(request, reference)
-                print(result)
-                return Response({'authorization_url': authorization_url})
+                result = self.verify_payment(request, reference) # Verify payment before updating wallet
+                return Response({'authorization_url': authorization_url, 'amount': data['amount']}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'error': 'Unable to initialize transaction.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'ERROR':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
     def verify_payment(self, request, reference):
+        """Verify payment before updating wallet."""
         url = f'https://api.paystack.co/transaction/verify/{reference}'
         headers = {
             'Authorization': f'Bearer {paystack_secret_key}',
@@ -112,10 +125,10 @@ class TransferFundsView(APIView):
     def post(self, request):
         serializer = TransferFundsSerializer(data=request.data)
         if serializer.is_valid():
-            recipient_username = serializer.validated_data['recipient']
+            recipient_email = serializer.validated_data['email']
             amount = serializer.validated_data['amount']
             sender_wallet = Wallet.objects.filter(user=request.user).first()
-            recipient = get_object_or_404(settings.AUTH_USER_MODEL, username=recipient_username) # Evaluates to either custom user, goufer or errandboy
+            recipient = get_object_or_404(settings.AUTH_USER_MODEL, email=recipient_email) # Evaluates to either custom user, goufer or errandboy
             recipient_wallet = Wallet.objects.filter(user=recipient).first()
 
             if sender_wallet.balance >= amount:
@@ -130,12 +143,33 @@ class TransferFundsView(APIView):
                 return Response({'error': 'Insufficient balance.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# class DashboardView(APIView):
-#     """User dashboard used for test"""
-#     permission_classes = [IsAuthenticated]
 
-#     def get(self, request):
-#         user = request.user
-#         wallet = Wallet.objects.filter(user=user).first()
-#         wallet_serializer = WalletSerializer(wallet)
-#         return Response({'user': user.username, 'wallet': wallet_serializer.data})
+class HourViewSet(viewsets.ModelViewSet):
+    """Hours viewset"""
+    queryset = Hour.objects.all()
+    serializer_class = HourSerializer
+
+    def get_permissions(self):
+        """Only Admins should be able to create or modify work hour"""
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return (IsAuthenticatedOrReadOnly(),)
+        return [IsAdminUser]
+
+
+class DayViewSet(viewsets.ModelViewSet):
+    """Days viewset"""
+    queryset = Day.objects.all()
+    serializer_class = DaySerializer
+
+    def get_permissions(self):
+        """Only Admins should be able to create or modify week days"""
+        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return (IsAuthenticatedOrReadOnly(),)
+        return [IsAdminUser]
+
+
+class ScheduleViewSet(viewsets.ModelViewSet):
+    """Schedule viewset"""
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    
