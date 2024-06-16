@@ -21,11 +21,12 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -r -o StrictHostKeyChecking=no ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/path/to/your/projecthome/ubuntu/testServer
+        scp -r -o StrictHostKeyChecking=no ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/testServer
 
     - name: SSH into EC2 and run commands
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          echo 'Syncing Push to Main'
           cd /home/ubuntu/testServer
           sudo systemctl restart nginx
           sudo service gunicorn restart
