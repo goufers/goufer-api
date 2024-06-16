@@ -25,7 +25,8 @@ jobs:
 
     - name: SSH into EC2 and run commands
       run: |
-        ssh -o StrictHostKeyChecking=no - --exclude=*.git ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          # Create a temporary tar archive excluding .git directory
+          tar cf - --exclude=.git . | ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'tar xf - -C /home/***/testServer/goufer-api'
           echo 'Syncing Push to CHIME'
           cd /home/ubuntu/testServer
           sudo systemctl restart nginx
