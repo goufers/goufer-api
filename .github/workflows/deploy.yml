@@ -21,12 +21,11 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -r -o StrictHostKeyChecking=no - --exclude=.git/objects ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/testServer/goufer-api
+        scp -r -o StrictHostKeyChecking=no ./* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/testServer/goufer-api
 
     - name: SSH into EC2 and run commands
       run: |
-          # Create a temporary tar archive excluding .git directory
-          tar cf - --exclude=.git/objects . | ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'tar xf - -C /home/***/testServer/goufer-api'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           echo 'Syncing Push to CHIME'
           cd /home/ubuntu/testServer
           sudo systemctl restart nginx
