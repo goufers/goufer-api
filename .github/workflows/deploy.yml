@@ -30,7 +30,7 @@ jobs:
           cd /home/ubuntu/testServer
           sudo systemctl restart nginx
           sudo service gunicorn restart
-          docker-compose down
-          docker-compose up -d
+          # docker-compose down
+          # docker-compose up -d
           echo "Success"
         EOF
