@@ -1,9 +1,8 @@
-name: Deploy to EC2
+name: Deploy to Test Server when changes are merged to main branch
 
 on:
   push:
     branches:
-      - CHIME
       - main
 
 jobs:
