@@ -162,3 +162,5 @@ SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "user.serializers.TokenPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
 }
+
+# TODO: Remove
