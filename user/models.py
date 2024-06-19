@@ -73,7 +73,7 @@ class CustomUser(AbstractUser):
 
 
 class Gofer(models.Model):
-    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='gofer', default=None)
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='gofer')
     expertise = models.CharField(max_length=200, default=None)
     mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Motorcycle')
     bio = models.TextField(max_length=1024)
