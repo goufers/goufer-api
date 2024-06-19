@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Location, Category, SubCategory, Document, Reviews
+from user.models import Errand, Gofer
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
 from django.urls import reverse
@@ -66,3 +67,19 @@ class ReviewsAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_select_related = ['user', 'gofer']
     
+@admin.register(Gofer)
+class GoferAdmin(admin.ModelAdmin):
+    list_display = ['expertise', 'sub_category']
+    search_fields = ['custom_user', 'expertise', 'sub_category', 'charges']
+    list_filter = ['custom_user', 'expertise']
+    list_per_page = 20
+
+
+
+@admin.register(Errand) 
+class ErrandAdmin(admin.ModelAdmin):
+    list_display = ['user', 'task_description', 'sub_category', 'gofer', 'estimated_duration', 'status']
+    search_fields = ['user', 'gofer', 'sub_category']
+    list_filter = ['user', 'gofer', 'sub_category']
+    list_per_page = 10
+    list_select_related =['user', 'gofer']

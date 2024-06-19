@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer
+from main.serializers import CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer, ErrandSerializer, GoferSerializer
 from .models import Category, Document, Location, SubCategory, Reviews
+from user.models import Gofer, Errand
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
@@ -80,3 +81,19 @@ class ReviewsViewSet(ModelViewSet):
         return [IsAuthenticated()]
 
 
+class ErrandViewSet(ModelViewSet):
+    serializer_class = ErrandSerializer
+    
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Errand.objects.filter(user=user)
+
+class GoferViewSet(ModelViewSet):
+    queryset = Gofer.objects.all()
+    serializer_class = GoferSerializer
+    permission_classes = [IsAuthenticated]
