@@ -155,7 +155,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),# NOTE: How long a token is considered valid
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),# NOTE: How long a token is considered valid
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5), # NOTE: Period before refresh token expires and user forced to login with credentials
     'BLACKLIST_AFTER_ROTATION': True,
     'ROTATE_REFRESH_TOKENS': True,
