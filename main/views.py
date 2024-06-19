@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer
-from .models import Category, Document, Location, SubCategory, Reviews
+from main.serializers import CategorySerializer, ContractSerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer
+from .models import Category, Contract, Document, Location, SubCategory, Reviews
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
@@ -78,5 +78,16 @@ class ReviewsViewSet(ModelViewSet):
         if self.request.method in ['PUT', 'DELETE', 'PATCH']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
+    
+    
+    
+class ContractViewSet(ModelViewSet):
+    serializer_class = ContractSerializer
+
+    def get_queryset(self):
+        return Contract.objects.filter(gofer_id=self.kwargs['gofer_pk'])
+    
+    def get_serializer_context(self):
+        return {'gofer_id': self.kwargs['gofer_pk']}
 
 
