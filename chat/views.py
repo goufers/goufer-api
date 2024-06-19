@@ -1,79 +1,68 @@
-from django.contrib.auth import login, logout, authenticate
-from user.models import CustomUser, Gofer
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from rest_framework import generics, permissions
+from .models import ChatRoom, ChatMessage
+from .serializers import ChatRoomSerializer, ChatMessageSerializer
+from user.models import Gofer, CustomUser
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
+from rest_framework import status
 
-from .models import Gofer, ChatRoom
-from .forms import SignUpForm
+class ChatRoomListCreate(generics.ListCreateAPIView):
+    queryset = ChatRoom.objects.all()
+    serializer_class = ChatRoomSerializer
+    #permission_classes = [permissions.IsAuthenticated]
 
-def frontpage(request):
-    return render(request, "chat/frontpage.html")
+class ChatRoomDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ChatRoom.objects.all()
+    serializer_class = ChatRoomSerializer
+    #permission_classes = [permissions.IsAuthenticated]
 
-def signup(request):
-    if request.method == "POST":
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("login")
-    else:
-        form = SignUpForm()
-    return render(request, "chat/signup.html", {'form': form})
+class ChatMessageListCreate(generics.ListCreateAPIView):
+    queryset = ChatMessage.objects.all()
+    serializer_class = ChatMessageSerializer
+    #permission_classes = [permissions.IsAuthenticated]
 
-def loginUser(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user=user)
-            return redirect('gofers_list')
-        else:
-            return JsonResponse({'error': 'Invalid username or password'})
-    return render(request, 'chat/login.html')
+class ChatMessageDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ChatMessage.objects.all()
+    serializer_class = ChatMessageSerializer
+    #permission_classes = [permissions.IsAuthenticated]
 
-def logoutUser(request):
-    logout(request)
-    return redirect('frontpage')
-
-@login_required
+@api_view(['GET'])
+#@permission_classes([permissions.IsAuthenticated])
 def gofers_list(request):
     gofers = Gofer.objects.annotate(order=F('id'))
     users = CustomUser.objects.all()
     user = request.user
-    context = {
-        'gofers': gofers,
-        'users': users,
-        'user': user
-    }
+
     try:
         gofer = Gofer.objects.get(user=user.id)
         chat_rooms = ChatRoom.objects.filter(Q(user=user) | Q(gofer=gofer))
-        context['chat_rooms'] = chat_rooms
     except Gofer.DoesNotExist:
         chat_rooms = ChatRoom.objects.filter(user=user)
-        context['chat_rooms'] = chat_rooms
-    return render(request, 'chat/gofers_list.html', context)
+    
+    return Response({
+        'gofers': gofers.values(),
+        'users': users.values(),
+        'chat_rooms': chat_rooms.values()
+    })
 
-@login_required
+@api_view(['POST'])
+#@permission_classes([permissions.IsAuthenticated])
 def create_chat_room(request, gofer_id):
     user = request.user
     gofer = get_object_or_404(Gofer, id=gofer_id)
-    
-    # Check if a chat room already exists for this user and gofer
-    chat_room = ChatRoom.objects.filter(user=user, gofer=gofer).first()
-    
-    if chat_room:
-        # If a chat room already exists, return it
-        return redirect('chat_room', room_id=chat_room.id)
+    print(f"Creating chat room for user: {user.username}, gofer: {gofer.name}")
+    chat_room, created = ChatRoom.objects.get_or_create(user=user, gofer=gofer)
+    if created:
+        print(f"Chat room created: {chat_room.id}")
+        return Response({'message': 'Chat room created', 'room_id': chat_room.id}, status=status.HTTP_201_CREATED)
     else:
-        # If no chat room exists, create a new one
-        chat_room = ChatRoom.objects.create(user=user, gofer=gofer)
-        return redirect('chat_room', room_id=chat_room.id)
+        print(f"Chat room already exists: {chat_room.id}")
+        return Response({'message': 'Chat room already exists', 'room_id': chat_room.id}, status=status.HTTP_200_OK)
 
-@login_required
+@api_view(['GET'])
+#@permission_classes([permissions.IsAuthenticated])
 def chat_room(request, room_id):
     chat_room = get_object_or_404(ChatRoom, id=room_id)
-    return render(request, 'chat/chat_room.html', {'chat_room': chat_room})
+    return Response(ChatRoomSerializer(chat_room).data)
