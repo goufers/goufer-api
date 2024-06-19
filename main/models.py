@@ -27,7 +27,7 @@ class Category(models.Model):
     ('technical', 'Technical'),
     ('employments', 'Employment'),
     ('housing', 'Housing'),
-    ('shopping', 'Shopping'),
+    ('real_estate', 'Real Estate'),
 )
     category_name = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
     description = models.TextField(blank=True, null=True)
@@ -71,38 +71,30 @@ class Reviews(models.Model):
     
     
 class Contract(models.Model):
+    
     CONTRACT_STATUS_CHOICES = [
         ('Pending', 'Pending'),
-        ('Active', 'Active'),
-        ('Settled', 'Settled'),
-        ('Declined', 'Declined'),
-        ('Terminated', 'Terminated'),
+        ('active', 'Active'),
+        ('settled', 'Settled'),
+        ('declined', 'Declined'),
+        ('terminated', 'Terminated'),
     ]
-    contract_code = models.CharField(max_length=10, unique=True)
-    user = models.ForeignKey(CustomUser, related_name='contracts', on_delete=models.CASCADE)
-    gofer_or_errandBoy = models.ForeignKey(CustomUser, related_name = 'contract', on_delete=models.CASCADE)
-    contract_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    pay_rate = models.DecimalField(max_digits=10, decimal_places=2) # per day or per hour
-    contract_length = models.IntegerField() # this is duration in days
+    
+    # custom_user = models.ForeignKey(CustomUser, related_name='contracts_assigned', on_delete=models.CASCADE)
+    gofer = models.ForeignKey(Gofer, related_name = 'contracts', on_delete=models.CASCADE)
+    pay_rate = models.DecimalField(max_digits=10, decimal_places=2) 
+    scope_of_work = models.TextField()
     start_date = models.DateField()
-    end_date = models.DateField()
-    days_remaining = models.IntegerField(default=0)
+    end_date = models.DateField() 
     contract_status = models.CharField(max_length=20, choices=CONTRACT_STATUS_CHOICES, default='Pending')
     remark = models.TextField(blank=True)
-    created_at = models.DateTimeField(editable=False, auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
 
     def __str__(self):
-        return f"Contract #{self.pk} - {self.user} - {self.gofer_or_errandBoy} - {self.contract_length} days - {self.contract_status}"
+        return f"Contract #{self.pk} - {self.user} - {self.gofer_or_errandBoy} - {self.contract_status}"
 
-    def save(self, *args, **kwargs):
-        self.contract_amount = self.pay_rate * self.contract_length
-        self.payment_remaining = max(self.contract_amount - self.payment_made, 0)
-        self.days_remaining = max((self.end_date - timezone.now().date()).days, 0)
-        if self.days_remaining == 0:
-            self.contract_status = 'Settled'
-        super().save(*args, **kwargs)
     
 
  
