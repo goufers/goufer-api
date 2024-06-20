@@ -8,7 +8,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
-from main.serializers import DocumentSerializer
+from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -74,13 +74,13 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         ]
 
 class GoferSerializer(serializers.ModelSerializer):
-    documents = DocumentSerializer(many=True, read_only=True)
+    documents = GoferDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
         fields = "__all__"
         
 class VendorSerializer(serializers.ModelSerializer):
-    documents = DocumentSerializer(many=True, read_only=True)
+    documents = VendorDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Vendor
         fields = "__all__"
@@ -121,7 +121,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
 
 class ErrandBoySerializer(serializers.ModelSerializer):
-    documents = DocumentSerializer(many=True, read_only=True)
+    documents = ErrandBoyDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = ErrandBoy
         fields = "__all__"
