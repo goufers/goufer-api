@@ -51,8 +51,8 @@ def send_code(request):
     return Response({'detail': 'Verification code sent successfully.'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 @phone_unverified
+@permission_classes([IsAuthenticated])
 def verify_phone(request):
     code = request.data.get('code')
     if utils.check(request.user.phone_number, code):
