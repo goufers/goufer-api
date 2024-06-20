@@ -103,6 +103,9 @@ class Reviews(models.Model):
     def __str__(self) -> str:
         return f"This is the review of {self.reviews.gofer}"
     
+class Gofer(models.Model):
+    pass
+    
     
 
  
