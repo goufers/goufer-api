@@ -79,10 +79,14 @@ class Gofer(models.Model):
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    is_on_contract = models.BooleanField(default=False)
+    
     
     def __str__(self) -> str:
         return f"Gofer {self.custom_user.first_name}"
+        return f"Gofer {self.user.first_name}"
+
+class MessagePoster(models.Model):
+    custom_username = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
     
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
