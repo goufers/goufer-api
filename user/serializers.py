@@ -9,7 +9,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
 from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer
-from main.serializers import DocumentSerializer
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 
