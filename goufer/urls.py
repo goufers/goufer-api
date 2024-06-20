@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework_simplejwt.views import TokenRefreshView
 
 
 admin.site.site_header = "Goufer Administration"
@@ -28,6 +29,7 @@ urlpatterns = [
     path('api/v1/users/', include('user.urls')),
     path('api/v1/main/', include('main.urls')),
     path('api/v1/users/wallet/', include('transaction.urls')),
+    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
 
 ]
 

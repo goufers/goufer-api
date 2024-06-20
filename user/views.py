@@ -5,9 +5,9 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from goufer import settings
-from .models import CustomUser
+from .models import CustomUser, Gofer
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, renderer_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -36,6 +36,7 @@ def register_user(request):
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
+            'auth_status': str(user.is_authenticated)
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,8 +52,8 @@ def send_code(request):
     return Response({'detail': 'Verification code sent successfully.'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 @phone_unverified
+@permission_classes([IsAuthenticated])
 def verify_phone(request):
     code = request.data.get('code')
     if utils.check(request.user.phone_number, code):
@@ -109,7 +110,8 @@ def verify_email(request, uidb64, token):
         return Response({'detail': 'Email verified successfully'}, status=status.HTTP_200_OK)
     else:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-@api_view(['POST', 'GET'])
+    
+@api_view(['POST'])
 def login_user(request):
     '''
     Login a user
