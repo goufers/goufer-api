@@ -1,12 +1,15 @@
 from rest_framework_nested import routers
-from .views import CategoryViewSet, DocumentViewSet, LocationViewSet, ReviewsViewSet, SubCategoryViewSet
+from pprint import pprint
+from .views import CategoryViewSet, LocationViewSet, ReviewsViewSet, SubCategoryViewSet
 
 router = routers.DefaultRouter()
 
 # Parent routers
 router.register('categories', CategoryViewSet, basename='çollections')
-router.register('documents', DocumentViewSet, basename='documents')
 router.register('location', LocationViewSet, basename='location')
+# router.register('gofers', LocationViewSet, basename='gofer')
+# router.register('vendors', LocationViewSet, basename='gofer')
+# router.register('vendors', LocationViewSet, basename='gofer')
 
 
 # Child routers
@@ -14,4 +17,7 @@ category_router = routers.NestedDefaultRouter(router, 'categories', lookup='cate
 category_router.register('subcategory', SubCategoryViewSet, basename='category_subcategory')
 
 
+
+
 urlpatterns = router.urls + category_router.urls
+
