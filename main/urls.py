@@ -22,3 +22,4 @@ gofer_router = routers.NestedDefaultRouter(router, 'gofers', lookup='gofers')
 gofer_router.register('errands', ErrandViewSet, basename='gofers_errand')
 
 urlpatterns = router.urls + category_router.urls + gofer_router.urls 
+
