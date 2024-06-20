@@ -11,6 +11,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
 
+        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -19,6 +20,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
+        # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -31,8 +33,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Get authenticated user from scope
         user = self.scope['user']
 
+        # Ensure room exists before saving message
+        room = await self.get_room(self.room_id)
+        if not room:
+            return  # Optionally handle case where room does not exist
+        
         # Save message to database
-        await self.save_message_to_db(user, message)
+        await self.save_message(room, user, message)
 
         # Send message to room group
         await self.channel_layer.group_send(
@@ -45,18 +52,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        message = event['message']
-        sender = event['sender']
-
+        # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'message': message,
-            'sender': sender,
+            'message': event['message'],
+            'sender': event['sender'],
         }))
-
-    async def save_message_to_db(self, user, message):
-        room = await self.get_room(self.room_id)
-        if room:
-            await self.save_message(room, user, message)
 
     @sync_to_async
     def get_room(self, room_id):
@@ -66,6 +66,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, room, user, message):
         ChatMessage.objects.create(
             room=room,
-            sender=user,  # Assign the authenticated user instance
+            sender=user,
             content=message
         )
