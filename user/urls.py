@@ -1,7 +1,5 @@
 from django.urls import path 
-from . import views, password_reset_views, vendor_views, errand_boy_views
-from rest_framework.routers import SimpleRouter
-
+from . import views, password_reset_views
 
 urlpatterns = [
     path('register/', views.register_user, name='register-user'),
