@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+p*dvp7+2g2n2u-6ahklub4fvyvuy!@-q1qgf@$mx(dar6b(hb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "54.147.58.183"]
 
 
 # Application definition
@@ -132,6 +132,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = 'media/'
 
@@ -154,7 +155,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),# NOTE: How long a token is considered valid
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),# NOTE: How long a token is considered valid
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5), # NOTE: Period before refresh token expires and user forced to login with credentials
     'BLACKLIST_AFTER_ROTATION': True,
     'ROTATE_REFRESH_TOKENS': True,

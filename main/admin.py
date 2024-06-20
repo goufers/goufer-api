@@ -30,12 +30,12 @@ class SubCategoryAdmin(admin.ModelAdmin):
 class SubCategoryInline(admin.StackedInline):
     model = SubCategory
 
-@admin.register(Document)
-class DocumentAdmin(admin.ModelAdmin):
-    list_display = ['document_type', 'custom_user', 'document_of_expertise', 'uploaded_at', 'is_verified']
-    search_fields = ['document_type__istartswith']
-    list_filter = ['document_type']
-    list_per_page = 10
+# @admin.register(Document)
+# class DocumentAdmin(admin.ModelAdmin):
+#     list_display = ['document_type', 'message_poster', 'document_of_expertise', 'uploaded_at', 'is_verified']
+#     search_fields = ['document_type__istartswith']
+#     list_filter = ['document_type']
+#     list_per_page = 10
     
 
 
@@ -61,9 +61,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Reviews)
 class ReviewsAdmin(admin.ModelAdmin):
-    list_display = ['user', 'gofer', 'comment', 'rating', 'date']
+    list_display = ['message_poster', 'gofer', 'comment', 'rating', 'date']
     search_fields = ['user__istartswith', 'gofer__istartswith', 'rating ']
-    list_filter = ['user', 'gofer', 'rating', 'date']
+    list_filter = ['message_poster', 'gofer', 'rating', 'date']
     list_per_page = 10
     list_select_related = ['user', 'gofer']
     

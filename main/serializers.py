@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument 
+
 from .models import Category, Document, SubCategory, Reviews, Location 
 from user.models import Gofer, Errand, CustomUser
 
@@ -11,16 +13,19 @@ class CategorySerializer(serializers.ModelSerializer):
         
         
         
-class DocumentSerializer(serializers.ModelSerializer):
+class GoferDocumentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Document
+        model = GoferDocument
         fields = "__all__"
         
-    # def save(self, **kwargs):
-    #     nin = self.validated_data['nin']
-    #     bvn = self.validated_data['bvn']
-        
-    #     return super().save(**kwargs)
+class VendorDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VendorDocument
+        fields = "__all__"
+class ErrandBoyDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ErrandBoyDocument
+        fields = "__all__"
         
         
 class SubCategorySerializer(serializers.ModelSerializer):
@@ -46,6 +51,13 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
+        
+
+   
+    
+
+    
+    
 
 
 class ErrandSerializer(serializers.ModelSerializer):
@@ -56,7 +68,7 @@ class ErrandSerializer(serializers.ModelSerializer):
 
 class GoferSerializer(serializers.ModelSerializer):
     sub_category = SubCategorySerializer()
-    documents = DocumentSerializer(many=True, read_only=True)
+    documents = GoferDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
         fields = ['id', 'custom_user', 'expertise', 'bio', 'sub_category', 'charges', 'documents']

@@ -1,14 +1,14 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer, ErrandSerializer, GoferSerializer
-from .models import Category, Document, Location, SubCategory, Reviews
-from user.models import Gofer, Errand
+from main.serializers import CategorySerializer, ErrandBoyDocumentSerializer, GoferDocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer, VendorDocumentSerializer
+from user.models import ErrandBoy, Gofer, Vendor
+from .models import Category, ErrandBoyDocument, GoferDocument, Location, SubCategory, Reviews, VendorDocument
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 
-# Create your views here.
+
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
@@ -22,8 +22,8 @@ class CategoryViewSet(ModelViewSet):
             return [IsAdminUser()]
         return [AllowAny()]
         
-class DocumentViewSet(ModelViewSet):
-    serializer_class = DocumentSerializer
+class GoferDocumentViewSet(ModelViewSet):
+    serializer_class = GoferDocumentSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['document_type']
@@ -35,9 +35,51 @@ class DocumentViewSet(ModelViewSet):
         return [IsAuthenticated()]
     
     def get_queryset(self):
+        user = self.request.user
+        logged_in_gofer = Gofer.objects.only('id').get(custom_user=user)
         if self.request.user.is_staff:
-            return Document.objects.all()
-        return Document.objects.filter(custom_user=self.request.user)
+            return GoferDocument.objects.all()
+        return GoferDocument.objects.filter(gofer_id=logged_in_gofer)
+    
+    
+class VendorDocumentViewSet(ModelViewSet):
+    serializer_class = VendorDocumentSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['document_type']
+    search_fields = ['document_type']
+    
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+    
+    def get_queryset(self):
+        user = self.request.user
+        logged_in_vendor = Vendor.objects.only('id').get(custom_user=user)
+        if self.request.user.is_staff:
+            return VendorDocument.objects.all()
+        return VendorDocument.objects.filter(vendor_id=logged_in_vendor)
+    
+    
+class ErrandBoyDocumentViewSet(ModelViewSet):
+    serializer_class = ErrandBoyDocumentSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['document_type']
+    search_fields = ['document_type']
+    
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+    
+    def get_queryset(self):
+        user = self.request.user
+        logged_in_errand_boy = ErrandBoy.objects.only('id').get(user=user)
+        if self.request.user.is_staff:
+            return ErrandBoyDocument.objects.all()
+        return ErrandBoyDocument.objects.filter(gofer_id=logged_in_errand_boy)
     
     
 class LocationViewSet(ModelViewSet):
