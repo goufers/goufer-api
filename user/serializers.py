@@ -1,6 +1,6 @@
+import re
 from rest_framework import serializers
 from .models import CustomUser, Gofer, Vendor
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import CustomUser, Gofer, Vendor, ErrandBoy
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
 from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.contrib.auth.password_validation import validate_password
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -37,7 +39,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['email', 'phone_number', 'password', 'first_name', 'last_name']
         extra_kwargs = {'password': {'write_only': True}}
-
+        
+    def validate_password(self, password):
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.messages)
+        return password
+    
+    def validate_phone_number(self, phone_number):
+        if len(phone_number)!= 14:
+            raise serializers.ValidationError("Enter valid phone number")
+        elif not phone_number.startswith('+'):
+            raise serializers.ValidationError("Phone number must include country code starting with +")
+        return phone_number
+    
     def create(self, validated_data):
         '''
         This method is used to create a new custom user instance. It takes the validated data as input and returns the newly created user instance.
@@ -48,6 +64,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         Returns:
             CustomUser: A newly created custom user instance.
         '''
+        self.validate_password(validated_data['password'])
         user = CustomUser.objects.create_user(
             phone_number=validated_data['phone_number'],
             email=validated_data['email'],
@@ -57,14 +74,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
         )
         return user
     
-
-class TokenPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['username'] = user.username
-
-        return token
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
