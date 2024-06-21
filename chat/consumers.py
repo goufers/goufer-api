@@ -2,7 +2,7 @@
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-from .models import ChatMessage, ChatRoom
+from .models import ChatMessage, Conversation
 from django.shortcuts import get_object_or_404
 from asgiref.sync import sync_to_async
 
@@ -60,7 +60,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def get_room(self, room_id):
-        return get_object_or_404(ChatRoom, id=room_id)
+        return get_object_or_404(Conversation, id=room_id)
 
     @sync_to_async
     def save_message(self, room, user, message):
