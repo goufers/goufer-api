@@ -88,6 +88,10 @@ class Gofer(models.Model):
 class MessagePoster(models.Model):
     custom_username = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
     
+    def __str__(self) -> str:
+        return f"User {self.custom_username.first_name}"
+    
+    
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
     business_name = models.CharField(max_length=255)
