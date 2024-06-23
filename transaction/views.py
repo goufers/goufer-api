@@ -8,20 +8,21 @@ from rest_framework.permissions import (
     )
 from django.shortcuts import get_object_or_404
 from .models import (
-    Wallet, Transaction, Bank, 
-    Hour, Day, Schedule
+    Wallet, Transaction, Bank, Schedule, ProGofer, Booking
     )
+
 from .serializers import (
-    WalletSerializer, TransactionSerializer, BankSerializer, 
+    BankSerializer, 
     FundWalletSerializer, TransferFundsSerializer,
-    HourSerializer, DaySerializer, ScheduleSerializer
+    ScheduleSerializer, BookingSerializer, ProGoferSerializer,
+    TransactionSerializer
     )
 import requests
 from decimal import Decimal
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from user.models import CustomUser
+from user.models import CustomUser, Gofer
 from django.db.models import Count
 
 
@@ -144,32 +145,110 @@ class TransferFundsView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class HourViewSet(viewsets.ModelViewSet):
-    """Hours viewset"""
-    queryset = Hour.objects.all()
-    serializer_class = HourSerializer
-
-    def get_permissions(self):
-        """Only Admins should be able to create or modify work hour"""
-        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return (IsAuthenticatedOrReadOnly(),)
-        return [IsAdminUser]
-
-
-class DayViewSet(viewsets.ModelViewSet):
-    """Days viewset"""
-    queryset = Day.objects.all()
-    serializer_class = DaySerializer
-
-    def get_permissions(self):
-        """Only Admins should be able to create or modify week days"""
-        if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return (IsAuthenticatedOrReadOnly(),)
-        return [IsAdminUser]
-
-
-class ScheduleViewSet(viewsets.ModelViewSet):
-    """Schedule viewset"""
-    queryset = Schedule.objects.all()
-    serializer_class = ScheduleSerializer
+class TransactionListView(APIView):
+    """List all transactions for authenticated user."""
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        transactions = Transaction.objects.filter(wallet__user=request.user).order_by('-created_at')
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
+
+class ScheduleCreateView(APIView):
+    """Create a new schedule"""
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        user = request.user
+        if not isinstance(user, (Gofer, ProGofer)):
+            return Response({'error': 'Only gofers and celeb gofers can create schedules.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = get_object_or_404(Gofer, pk=request.user.pk)
+        data = request.data.copy()
+        data['user'] = request.user.id
+        serializer = ScheduleSerializer(data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ScheduleListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """List schedules for the authenticated user"""
+        schedules = Schedule.objects.filter(user=request.user)
+        serializer = ScheduleSerializer(schedules, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BookingCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        pro_gofer = get_object_or_404(ProGofer, pk=request.data.get('gofer_id'))
+        schedule = get_object_or_404(Schedule, pk=request.data.get('schedule_id'))
+        duration = int(request.data.get('duration', 1))
+
+        data = {
+            'user': user.id,
+            'gofer': pro_gofer.id,
+            'schedule': schedule.id,
+            'duration': duration
+        }
+
+        serializer = BookingSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BookingUpdateView(generics.UpdateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Booking.objects.filter(user=self.request.user, status='Pending')
+
+
+class BookingCancelView(generics.DestroyAPIView):
+    queryset = Booking.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Booking.objects.filter(user=self.request.user, status='Pending')
+
+    def perform_destroy(self, instance):
+        instance.status = 'Terminated'
+        instance.save()
+
+
+class BookingAcceptView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
+        if booking.gofer.user == request.user:
+            booking.status = 'Accepted'
+            booking.save()
+            return Response({'status': 'Booking accepted.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to accept this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+class BookingDeclineView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
+        comment = request.data.get('comment', '')
+        if booking.gofer.user == request.user:
+            booking.status = 'Declined'
+            booking.comment = comment
+            booking.save()
+            return Response({'status': 'Booking declined.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to decline this booking.'}, status=status.HTTP_403_FORBIDDEN)
