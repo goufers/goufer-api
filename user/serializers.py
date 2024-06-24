@@ -1,6 +1,5 @@
 import re
 from rest_framework import serializers
-from .models import CustomUser, Gofer, Vendor
 from .models import CustomUser, Gofer, Vendor, ErrandBoy
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -81,6 +80,9 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         fields = [
             'gender', 'first_name', 'last_name', 'location'
         ]
+        
+        
+
 
 class GoferSerializer(serializers.ModelSerializer):
     documents = GoferDocumentSerializer(many=True, read_only=True)

@@ -1,6 +1,6 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import ErrandBoy, Gofer, MessagePoster, Vendor
+from user.models import CustomUser, ErrandBoy, Gofer, Vendor
 from django.core.validators import FileExtensionValidator
 
 
@@ -44,8 +44,8 @@ class SubCategory(models.Model):
     def __str__(self):
         return self.name
     
-class GoferDocument(models.Model):
     
+class Document(models.Model):
     DOCUMENT_CHOICES = (
         ('ssn', 'SSN'),
         ('nin', 'NIN')
@@ -53,45 +53,32 @@ class GoferDocument(models.Model):
     
     document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
     document_number = models.CharField(max_length=11, unique=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+    
+    
+class GoferDocument(Document):
     gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents" )
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
     
     def __str__(self) -> str:
         return self.document_type
     
-class VendorDocument(models.Model):
+class VendorDocument(Document):
     
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
-    
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="documents" )
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
     
     def __str__(self) -> str:
         return self.document_type
-class ErrandBoyDocument(models.Model):
-    
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
-    
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
+class ErrandBoyDocument(Document):
     errand_boy = models.ForeignKey(ErrandBoy, on_delete=models.CASCADE, related_name="documents" )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
     
     def __str__(self) -> str:
         return self.document_type
+    
+class MessagePoster(models.Model):
+     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
     
 class Reviews(models.Model):
     message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='user_reviews')
@@ -103,8 +90,8 @@ class Reviews(models.Model):
     def __str__(self) -> str:
         return f"This is the review of {self.reviews.gofer}"
     
-class Gofer(models.Model):
-    pass
+
+    
     
     
 
