@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,7 +47,7 @@ INSTALLED_APPS = [
     'user',
     "corsheaders",
     'rest_framework',
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt',
     'django_filters',
     
 ]
@@ -159,7 +162,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),# NOTE: How long a token is considered valid
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),# NOTE: How long a token is considered valid
     "REFRESH_TOKEN_LIFETIME": timedelta(days=5), # NOTE: Period before refresh token expires and user forced to login with credentials
     'BLACKLIST_AFTER_ROTATION': True,
     'ROTATE_REFRESH_TOKENS': True,
@@ -167,3 +170,7 @@ SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "user.serializers.TokenPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
 }
+
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')

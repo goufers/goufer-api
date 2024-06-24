@@ -1,7 +1,5 @@
 from django.urls import path 
-from . import views, password_reset_views, vendor_views, errand_boy_views
-from rest_framework.routers import SimpleRouter
-
+from . import views, password_reset_views
 
 urlpatterns = [
     path('register/', views.register_user, name='register-user'),
@@ -14,11 +12,6 @@ urlpatterns = [
     path('verify-email/<uidb64>/<token>/', views.verify_email, name='verify_email'),
     path('password_reset/', password_reset_views.PasswordResetRequestView.as_view(), name='password_reset'),
     path('password_reset_confirm/<uid>/<token>/', password_reset_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    #path('gofer/', views.create_list_gofer, name='create-list-gofer'),
 ]
 
-router = SimpleRouter()
-router.register('vendor', vendor_views.VendorViewSet, basename='vendor')
-router.register('errand-boy', errand_boy_views.ErrandBoyViewset, basename='errand-boy')
 
-urlpatterns += router.urls
