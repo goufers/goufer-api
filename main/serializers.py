@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Category, Document, SubCategory, Reviews, Location 
+from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument 
+
 
 
 
@@ -10,16 +11,19 @@ class CategorySerializer(serializers.ModelSerializer):
         
         
         
-class DocumentSerializer(serializers.ModelSerializer):
+class GoferDocumentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Document
+        model = GoferDocument
         fields = "__all__"
         
-    # def save(self, **kwargs):
-    #     nin = self.validated_data['nin']
-    #     bvn = self.validated_data['bvn']
-        
-    #     return super().save(**kwargs)
+class VendorDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VendorDocument
+        fields = "__all__"
+class ErrandBoyDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ErrandBoyDocument
+        fields = "__all__"
         
         
 class SubCategorySerializer(serializers.ModelSerializer):
@@ -41,3 +45,10 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
+        
+
+   
+    
+
+    
+    
