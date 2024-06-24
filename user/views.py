@@ -18,6 +18,7 @@ from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
 
 
+
 @api_view(['POST'])
 def register_user(request):
     ''' 
