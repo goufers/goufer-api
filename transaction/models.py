@@ -1,21 +1,13 @@
 from django.db import models
-from user.models import CustomUser
+from user.models import CustomUser, Gofer
 from django.utils import timezone
 import bcrypt
 from django.utils.translation import gettext_lazy as _
 
 
-def generate_hour_choices():
-    hours = []
-    for hour in range(0, 24):
-        time_str = f"{hour:02}:00"
-        hours.append((time_str, time_str))
-    return hours
-
-
 class Wallet(models.Model):
     ''' Wallet and transaction models '''
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='wallet')
+    custom_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='wallet')
     transaction_pin = models.CharField(max_length=4, blank=True, null=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -28,7 +20,7 @@ class Wallet(models.Model):
         return bcrypt.checkpw(pin.encode(), self.transaction_pin.encode())
     
     def _str_(self):
-        return f'{self.user.username} Wallet'
+        return f'{self.custom_user.username} Wallet'
 
 
 class Transaction(models.Model):
@@ -44,7 +36,7 @@ class Transaction(models.Model):
     
 class Bank(models.Model):
     """Users Bank information for withdrawals"""
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='transfer_recipient')
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='transfer_recipient')
     recipient_code = models.CharField(max_length=100, unique=True, null=True, blank=True)
     bank_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=10)
@@ -52,52 +44,77 @@ class Bank(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def _str_(self):
-        return f'{self.bank_name} - {self.account_number} ({self.user.username})'
+        return f'{self.bank_name} - {self.account_number} ({self.custom_user.username})'
 
 
-class Hour(models.Model):
-    name = models.CharField(max_length=10, choices=generate_hour_choices(), unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.name
+def generate_hour_choices():
+    hours = []
+    for hour in range(0, 24):
+        time_str = f"{hour:02}:00"
+        hours.append((time_str, time_str))
+    return hours
 
-class Day(models.Model):
-    DAY_CHOICES = [
-        ('Mon', 'Mon'),
-        ('Tues', 'Tues'),
-        ('Wed', 'Wed'),
-        ('Thur', 'Thur'),
-        ('Fri', 'Fri'),
-        ('Sat', 'Sat'),
-        ('Sun', 'Sun'),
-    ]
-    name = models.CharField(max_length=10, choices=DAY_CHOICES, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
 
 class Schedule(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='schedules')
-    gofer_or_errandBoy = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='active_schedules', blank=True, null=True)
-    day = models.ForeignKey(Day, on_delete=models.CASCADE)
-    from_hour = models.ForeignKey(Hour, on_delete=models.CASCADE, related_name='from_hour')
-    to_hour = models.ForeignKey(Hour, on_delete=models.CASCADE, related_name='to_hour')
-    is_active = models.BooleanField(default=True)
-    duration = models.IntegerField(_("Duration (optional)"), null=True, blank=True) # days for which the schedule is active. Active if null
+    """Professional users schedules"""
+    DAY_CHOICES = [
+        ('Mon', 'Monday'),
+        ('Tues', 'Tuesday'),
+        ('Wed', 'Wednesday'),
+        ('Thur', 'Thursday'),
+        ('Fri', 'Friday'),
+        ('Sat', 'Saturday'),
+        ('Sun', 'Sunday'),
+    ]
+
+    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='schedules')
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    from_hour = models.CharField(max_length=10, choices=generate_hour_choices())
+    to_hour = models.CharField(max_length=10, choices=generate_hour_choices())
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'gofer_or_errandBoy', 'day', 'from_hour', 'to_hour'], name='unique_schedule')
-        ]
-        ordering = ['day__created_at', 'from_hour__created_at']
+        ordering = ['day', '-created_at']
 
     def __str__(self):
-        return f"{self.user.username}'s availability on {self.day.name} from {self.from_hour.name} to {self.to_hour.name}"
+        return f"{self.gofer.custom_user.first_name} available on {self.day} from {self.from_hour} to {self.to_hour}"
 
 
+class Booking(models.Model):
+    """User-Professional booking"""
+    BOOKING_CHOICES = [('Active', 'Active'), ('Terminated', 'Terminated'), ('Settled', 'Settled'), ('Pending Approval', 'Pending Approval')]
+    custom_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='bookings')
+    gofer = models.ForeignKey('ProGofer', on_delete=models.CASCADE, related_name='bookings')
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='bookings')
+    duration = models.PositiveSmallIntegerField(_('How long in hours?'), default=1)
+    is_active = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=BOOKING_CHOICES, default='Pending')
+    comment = models.TextField(blank=True, null=True)  # For gofer's comment on decline
+    booked_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.custom_user.first_name} booked {self.gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"
 
 
+class ProGofer(models.Model):
+    """Special Gofers"""
+    class ProfessionChoices(models.TextChoices):
+        Doctor = 'Doctor'
+        Lawyer = 'Lawyer'
+        Artist= 'Artist'
+
+
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofers')
+    bio = models.TextField(blank=True, null=True)
+    profession = models.CharField(max_length=255)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.custom_user.first_name} - {self.profession}'
+    
