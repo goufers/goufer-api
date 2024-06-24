@@ -57,12 +57,18 @@ class Document(models.Model):
     is_verified = models.BooleanField(default=False)
     
     
+    def __str__(self) -> str:
+        return self.document_type
+    
+    
 class GoferDocument(Document):
     gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents" )
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
     
+    
     def __str__(self) -> str:
-        return self.document_type
+        return f"{self.document_of_expertise} for gofer"
+    
     
 class VendorDocument(Document):
     
@@ -70,12 +76,10 @@ class VendorDocument(Document):
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
     
     def __str__(self) -> str:
-        return self.document_type
+        return f"{self.document_of_expertise} for vendor"
 class ErrandBoyDocument(Document):
     errand_boy = models.ForeignKey(ErrandBoy, on_delete=models.CASCADE, related_name="documents" )
     
-    def __str__(self) -> str:
-        return self.document_type
     
 class MessagePoster(models.Model):
      custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
