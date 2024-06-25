@@ -8,13 +8,13 @@ from rest_framework.permissions import (
     )
 from django.shortcuts import get_object_or_404
 from .models import (
-    Wallet, Transaction, Bank, Schedule, ProGofer, Booking
+    Wallet, Transaction, Bank, Schedule, ProGofer, Booking, MessagePoster
     )
 
 from .serializers import (
     BankSerializer, 
     FundWalletSerializer, TransferFundsSerializer,
-    ScheduleSerializer, BookingSerializer, ProGoferSerializer,
+    ScheduleSerializer, BookingSerializer,
     TransactionSerializer
     )
 import requests
@@ -71,7 +71,7 @@ class FundWalletView(APIView):
         print(response_data)
         if response_data['status']:
             amount = response_data['data']['amount'] / 100  # Convert from kobo to naira
-            wallet = Wallet.objects.filter(user=request.user).first()
+            wallet = Wallet.objects.filter(custom_user=request.user).first()
             wallet.balance += Decimal(amount)
             wallet.save()
             Transaction.objects.create(wallet=wallet, amount=amount, transaction_type='deposit')
@@ -108,7 +108,7 @@ class CreateTransferRecipientView(APIView):
             if response_data['status']:
                 recipient_code = response_data['data']['recipient_code']
                 Bank.objects.create(
-                    user=request.user,
+                    custom_user=request.user,
                     recipient_code=recipient_code,
                     bank_name=name,
                     account_number=account_number
@@ -129,7 +129,7 @@ class TransferFundsView(APIView):
             recipient_email = serializer.validated_data['email']
             amount = serializer.validated_data['amount']
             sender_wallet = Wallet.objects.filter(user=request.user).first()
-            recipient = get_object_or_404(settings.AUTH_USER_MODEL, email=recipient_email) # Evaluates to either custom user, goufer or errandboy
+            recipient = get_object_or_404(CustomUser, email=recipient_email) # transfer can be to a gofer, errand boy or progofer
             recipient_wallet = Wallet.objects.filter(user=recipient).first()
 
             if sender_wallet.balance >= amount:
@@ -159,12 +159,12 @@ class ScheduleCreateView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         user = request.user
-        if not isinstance(user, (Gofer, ProGofer)):
-            return Response({'error': 'Only gofers and celeb gofers can create schedules.'}, status=status.HTTP_403_FORBIDDEN)
+        if not isinstance(user, ProGofer):
+            return Response({'error': 'Sorry, you do not have permission to create schedules.'}, status=status.HTTP_403_FORBIDDEN)
         
-        user = get_object_or_404(Gofer, pk=request.user.pk)
+        # user = get_object_or_404(ProGofer, pk=request.user.pk)
         data = request.data.copy()
-        data['user'] = request.user.id
+        data['gofer'] = request.user.id
         serializer = ScheduleSerializer(data=data)
         
         if serializer.is_valid():
@@ -179,7 +179,10 @@ class ScheduleListView(APIView):
 
     def get(self, request):
         """List schedules for the authenticated user"""
-        schedules = Schedule.objects.filter(user=request.user)
+        if not isinstance(request.user, ProGofer):
+            return Response({'error': 'Sorry, you do not have permission to view schedules.'}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(ProGofer, pk=request.user.pk)
+        schedules = Schedule.objects.filter(gofer=user)
         serializer = ScheduleSerializer(schedules, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -188,14 +191,14 @@ class BookingCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        user = request.user
+        message_poster = request.user
         pro_gofer = get_object_or_404(ProGofer, pk=request.data.get('gofer_id'))
         schedule = get_object_or_404(Schedule, pk=request.data.get('schedule_id'))
         duration = int(request.data.get('duration', 1))
 
         data = {
-            'user': user.id,
-            'gofer': pro_gofer.id,
+            'message_poster': message_poster.id,
+            'pro_gofer': pro_gofer.id,
             'schedule': schedule.id,
             'duration': duration
         }
@@ -205,6 +208,17 @@ class BookingCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BookingListView(generics.ListAPIView):
+    """List Bookings for a given progofer"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
+
+    def get_queryset(self):
+        if isinstance(self.request.user, MessagePoster):
+            return Booking.objects.filter(message_poster=self.request.user)
+        return Booking.objects.filter(pro_gofer=self.kwargs.get('pk'))
 
 
 class BookingUpdateView(generics.UpdateAPIView):
