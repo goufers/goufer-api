@@ -1,7 +1,8 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import ErrandBoy, Gofer, MessagePoster, Vendor
+from user.models import ErrandBoy, Gofer, Vendor, ProGofer, CustomUser
 from django.core.validators import FileExtensionValidator
+
 
 
 class Location(models.Model):
@@ -44,8 +45,8 @@ class SubCategory(models.Model):
     def __str__(self):
         return self.name
     
-class GoferDocument(models.Model):
     
+class Document(models.Model):
     DOCUMENT_CHOICES = (
         ('ssn', 'SSN'),
         ('nin', 'NIN')
@@ -53,45 +54,40 @@ class GoferDocument(models.Model):
     
     document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
     document_number = models.CharField(max_length=11, unique=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+    
+    
+    def __str__(self) -> str:
+        return self.document_type
+    
+    
+class GoferDocument(Document):
     gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents" )
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
+    
     
     def __str__(self) -> str:
-        return self.document_type
+        return f"{self.document_of_expertise} for gofer"
     
-class VendorDocument(models.Model):
     
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
+class VendorDocument(Document):
     
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="documents" )
     document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
     
     def __str__(self) -> str:
-        return self.document_type
-class ErrandBoyDocument(models.Model):
-    
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
-    
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
+        return f"{self.document_of_expertise} for vendor"
+class ErrandBoyDocument(Document):
     errand_boy = models.ForeignKey(ErrandBoy, on_delete=models.CASCADE, related_name="documents" )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
     
+    
+
+class MessagePoster(models.Model):
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
+
     def __str__(self) -> str:
-        return self.document_type
+        return self.custom_user.first_name
     
 class Reviews(models.Model):
     message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='user_reviews')
@@ -102,7 +98,9 @@ class Reviews(models.Model):
     
     def __str__(self) -> str:
         return f"This is the review of {self.reviews.gofer}"
-    
-    
 
- 
+
+    
+class ProGoferDocument(Document):
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name="documents")
+    document_of_expertise = models.FileField(upload_to='main/documents/pro_gofer', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
