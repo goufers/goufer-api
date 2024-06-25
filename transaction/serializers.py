@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import Wallet, Transaction, Bank, Schedule, ProGofer, Booking
+from .models import Wallet, Transaction, Bank, Schedule, Booking
 
 class WalletSerializer(serializers.ModelSerializer):
     """Users Wallet model serializer"""
     class Meta:
         model = Wallet
-        fields = ['user', 'transaction_pin', 'balance', 'created_at']
+        fields = ['custom_user', 'transaction_pin', 'balance', 'created_at']
 
 class TransactionSerializer(serializers.ModelSerializer):
     """Users Transaction model serializer"""
@@ -17,7 +17,7 @@ class BankSerializer(serializers.ModelSerializer):
     """Users Bank model serializer"""
     class Meta:
         model = Bank
-        fields = ['user', 'recipient_code', 'bank_name', 'account_number', 'created_at', 'updated_at']
+        fields = ['custom_user', 'recipient_code', 'bank_name', 'account_number', 'created_at', 'updated_at']
 
 
 class FundWalletSerializer(serializers.Serializer):
@@ -44,29 +44,22 @@ class ScheduleSerializer(serializers.ModelSerializer):
         return Schedule.objects.create(**validated_data)
 
 
-class ProGoferSerializer(serializers.ModelSerializer):
-    """Pro-gofer model serializer"""
-    class Meta:
-        model = ProGofer
-        fields = ['user', 'profession', 'bio', 'hourly_rate', 'is_verified', 'created_at']
-
-
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['id', 'user', 'gofer', 'schedule', 'duration', 'is_active', 'status', 'comment', 'booked_at', 'updated_at']
+        fields = ['id', 'message_poster', 'pro_gofer', 'schedule', 'duration', 'is_active', 'status', 'comment', 'booked_at', 'updated_at']
         read_only_fields = ['status', 'comment', 'booked_at', 'updated_at']
 
     def create(self, validated_data):
-        user = validated_data['user']
-        gofer = validated_data['gofer']
+        message_poster = validated_data['message_poster']
+        pro_gofer = validated_data['pro_gofer']
         schedule = validated_data['schedule']
         duration = validated_data['duration']
-        total_cost = gofer.hourly_rate * duration
+        total_cost = pro_gofer.hourly_rate * duration
 
-        if user.wallet.balance >= total_cost:
-            user.wallet.balance -= total_cost
-            user.wallet.save()
+        if message_poster.wallet.balance >= total_cost:
+            message_poster.wallet.balance -= total_cost
+            message_poster.wallet.save()
             return super().create(validated_data)
         else:
             raise serializers.ValidationError("Insufficient balance.")

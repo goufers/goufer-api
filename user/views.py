@@ -32,7 +32,7 @@ def register_user(request):
     serializer = CustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        wallet = Wallet.objects.create(user=user)
+        wallet = Wallet.objects.create(custom_user=user)
         wallet.save()
         refresh = RefreshToken.for_user(user)
         return Response({
