@@ -1,7 +1,8 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import ErrandBoy, Gofer, MessagePoster, Vendor
+from user.models import ErrandBoy, Gofer, Vendor, ProGofer, CustomUser
 from django.core.validators import FileExtensionValidator
+from abc import ABC
 
 
 class Location(models.Model):
@@ -43,8 +44,10 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return self.name
-    
-class GoferDocument(models.Model):
+
+
+########################################################################
+class Document(models.Model):
     
     DOCUMENT_CHOICES = (
         ('ssn', 'SSN'),
@@ -53,48 +56,38 @@ class GoferDocument(models.Model):
     
     document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
     document_number = models.CharField(max_length=11, unique=True)
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents" )
-    document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
     uploaded_at = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
     
     def __str__(self) -> str:
         return self.document_type
-    
-class VendorDocument(models.Model):
-    
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
-    
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="documents" )
-    document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
-    
-    def __str__(self) -> str:
-        return self.document_type
-class ErrandBoyDocument(models.Model):
-    
-    DOCUMENT_CHOICES = (
-        ('ssn', 'SSN'),
-        ('nin', 'NIN')
-    )
-    
-    document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
-    document_number = models.CharField(max_length=11, unique=True)
+
+
+class ErrandBoyDocument(Document):
     errand_boy = models.ForeignKey(ErrandBoy, on_delete=models.CASCADE, related_name="documents" )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    is_verified = models.BooleanField(default=False)
-    
-    def __str__(self) -> str:
-        return self.document_type
-    
+
+
+class VendorDocument(Document):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="documents")
+    document_of_expertise = models.FileField(upload_to='main/documents/vendor', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
+
+
+class GoferDocument(Document):
+    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents")
+    document_of_expertise = models.FileField(upload_to='main/documents/gofer', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
+
+
+class ProGoferDocument(Document):
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name="documents")
+    document_of_expertise = models.FileField(upload_to='main/documents/pro_gofer', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
+
+########################################################################
+
 class Reviews(models.Model):
-    message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='user_reviews')
+    message_poster = models.ForeignKey("MessagePoster", on_delete=models.CASCADE, related_name='user_reviews')
     gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='gofer_reviews')
     comment = models.TextField(blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
@@ -105,7 +98,10 @@ class Reviews(models.Model):
     
 class Gofer(models.Model):
     pass
-    
-    
 
- 
+
+class MessagePoster(models.Model):
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
+
+    def __str__(self) -> str:
+        return self.custom_user.first_name

@@ -3,9 +3,9 @@ from .models import Bank, Wallet, Transaction, Schedule, ProGofer, Booking
 
 
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ['gofer', 'day', 'from_hour', 'to_hour']
-    search_fields = ['gofer', 'day', 'from_hour', 'to_hour']
-    list_select_related = ['gofer']
+    list_display = ['pro_gofer', 'day', 'from_hour', 'to_hour']
+    search_fields = ['pro_gofer', 'day', 'from_hour', 'to_hour']
+    list_select_related = ['pro_gofer']
     list_filter = ['created_at']
     list_per_page = 10
 
@@ -37,12 +37,12 @@ class ProGoferAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['custom_user', 'gofer', 'schedule', 'duration', 'status']
-    search_fields = ['custom_user', 'gofer', 'is_active', 'duration']
+    list_display = ['message_poster', 'pro_gofer', 'schedule', 'duration', 'status']
+    search_fields = ['message_poster', 'pro_gofer', 'is_active', 'duration']
     list_filter = ['booked_at']
-    list_select_related = ['custom_user', 'gofer']
+    list_select_related = ['message_poster', 'pro_gofer']
     list_per_page = 10
-    list_display_links = ['custom_user', 'gofer', 'status']
+    list_display_links = ['message_poster', 'pro_gofer', 'status']
 
 
 
