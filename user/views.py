@@ -11,11 +11,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.viewsets import ModelViewSet
 from main.serializers import LocationSerializer
-from .serializers import CustomUserSerializer, UpdateProfileSerializer
+from .serializers import CustomUserSerializer, UpdateProfileSerializer, GoferSerializer
 from . import utils
 from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 
@@ -31,7 +33,7 @@ def register_user(request):
     serializer = CustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        wallet = Wallet.objects.create(user=user)
+        wallet = Wallet.objects.create(custom_user=user)
         wallet.save()
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -183,3 +185,16 @@ def UpdateProfile(request):
     
     return Response(updated_user.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class GoferViewset(ModelViewSet):
+    queryset = Gofer.objects.all()
+    serializer_class = GoferSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
+    
+    def update(self, request, pk):
+        gofer = Gofer.objects.get(id=pk)
+        serializer = GoferSerializer(data=request.data, instance=gofer, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
