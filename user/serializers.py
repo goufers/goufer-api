@@ -1,14 +1,13 @@
 import re
 from rest_framework import serializers
-from .models import CustomUser, Gofer, Vendor
-from .models import CustomUser, Gofer, Vendor, ErrandBoy
+from .models import CustomUser, Gofer, Vendor, ErrandBoy, ProGofer
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
-from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer
+from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer, ProGoferDocumentSerializer
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 
@@ -81,12 +80,25 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         fields = [
             'gender', 'first_name', 'last_name', 'location'
         ]
+        
+        
+
 
 class GoferSerializer(serializers.ModelSerializer):
     documents = GoferDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
         fields = "__all__"
+
+
+class ProGoferSerializer(serializers.ModelSerializer):
+    """Pro-gofer model serializer"""
+    documents = ProGoferDocumentSerializer(many=True, read_only=True)
+    class Meta:
+        model = ProGofer
+        fields = "__all__"
+
+
         
 class VendorSerializer(serializers.ModelSerializer):
     documents = VendorDocumentSerializer(many=True, read_only=True)
