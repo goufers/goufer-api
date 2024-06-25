@@ -20,6 +20,7 @@ from transaction.models import Wallet
 from django_filters.rest_framework import DjangoFilterBackend
 
 
+
 @api_view(['POST'])
 def register_user(request):
     ''' 

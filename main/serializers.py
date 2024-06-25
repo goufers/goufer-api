@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument, ProGoferDocument 
+from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument, ProGoferDocument, MessagePoster 
 
 
 
@@ -26,7 +26,13 @@ class ErrandBoyDocumentSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
 
-################################################################ Added this
+class MessagePosterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessagePoster
+        fields = "__all__"
+        
+        
+
 class ProGoferDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProGoferDocument
