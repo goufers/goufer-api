@@ -29,7 +29,7 @@ urlpatterns = [
     path('api/v1/users/', include('user.urls')),
     path('api/v1/main/', include('main.urls')),
     path('api/v1/users/wallet/', include('transaction.urls')),
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
+    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("api/v1/chat/", include("chat.urls")),
 
 ]
