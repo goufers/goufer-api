@@ -32,7 +32,7 @@ class MessagePosterSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
         
-################################################################ Added this
+
 class ProGoferDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProGoferDocument
