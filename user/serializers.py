@@ -80,6 +80,9 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         fields = [
             'gender', 'first_name', 'last_name', 'location'
         ]
+        
+        
+
 
 class GoferSerializer(serializers.ModelSerializer):
     documents = GoferDocumentSerializer(many=True, read_only=True)
