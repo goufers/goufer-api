@@ -1,4 +1,5 @@
 from django.contrib import admin
+from user.models import Errand, Gofer
 from .models import ErrandBoyDocument, GoferDocument, Location, Category, SubCategory, Reviews, VendorDocument
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
