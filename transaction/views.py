@@ -36,7 +36,6 @@ class FundWalletView(APIView):
     def post(self, request):
         serializer = FundWalletSerializer(data=request.data)
         if serializer.is_valid():
-            user = get_object_or_404(CustomUser, pk=request.user.pk)
             amount = serializer.validated_data['amount']
             email = request.user.email
             url = 'https://api.paystack.co/transaction/initialize'
@@ -154,17 +153,16 @@ class TransactionListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-class ScheduleCreateView(APIView):
+class ScheduleView(APIView):
     """Create a new schedule"""
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        user = request.user
-        if not isinstance(user, ProGofer):
+        if not request.user.user_type == 'ProGofer':
             return Response({'error': 'Sorry, you do not have permission to create schedules.'}, status=status.HTTP_403_FORBIDDEN)
         
-        # user = get_object_or_404(ProGofer, pk=request.user.pk)
-        data = request.data.copy()
-        data['gofer'] = request.user.id
+        user = get_object_or_404(ProGofer, custom_user__pk=request.user.pk)
+        data = request.data
+        data['pro_gofer'] = user.pk
         serializer = ScheduleSerializer(data=data)
         
         if serializer.is_valid():
@@ -173,16 +171,37 @@ class ScheduleCreateView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request, pk):
+        """Update a schedule"""
+        if not request.user.user_type == 'ProGofer':
+            return Response({'error': 'Sorry, you do not have permission to update schedules.'}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(ProGofer, custom_user__pk=request.user.pk)
+        schedule = get_object_or_404(Schedule, pk=pk)
+        data = request.data
+        data['pro_gofer'] = user.pk
+        serializer = ScheduleSerializer(schedule, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        """Delete a schedule"""
+        if not request.user.user_type == 'ProGofer':
+            return Response({'error': 'Sorry, you do not have permission to delete schedules.'}, status=status.HTTP_403_FORBIDDEN)
+        schedule = get_object_or_404(Schedule, pk=pk)
+        schedule.delete()
+        return Response({'message': 'Schedule deleted successfully.'}, status=status.HTTP_200_OK)
 
 class ScheduleListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """List schedules for the authenticated user"""
-        if not isinstance(request.user, ProGofer):
+        if not request.user.user_type == 'ProGofer':
             return Response({'error': 'Sorry, you do not have permission to view schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        user = get_object_or_404(ProGofer, pk=request.user.pk)
-        schedules = Schedule.objects.filter(gofer=user)
+        user = get_object_or_404(ProGofer, custom_user=request.user)
+        schedules = Schedule.objects.filter(pro_gofer=user)
         serializer = ScheduleSerializer(schedules, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

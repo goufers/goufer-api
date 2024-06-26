@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from user.models import CustomUser, ProGofer
 from main.models import MessagePoster
 import bcrypt
@@ -68,7 +69,7 @@ class Schedule(models.Model):
         ('Sun', 'Sunday'),
     ]
 
-    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedules')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedule')
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
     from_hour = models.CharField(max_length=10, choices=generate_hour_choices())
     to_hour = models.CharField(max_length=10, choices=generate_hour_choices())
@@ -77,7 +78,14 @@ class Schedule(models.Model):
 
     class Meta:
         ordering = ['day', '-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=[ 'pro_gofer', 'day', 'from_hour', 'to_hour'], name='unique_schedule')
+        ]
 
+    def clean(self):
+        super().clean()
+        if Schedule.objects.filter(pro_gofer=self.pro_gofer, day=self.day, from_hour=self.from_hour, to_hour=self.to_hour).exists():
+            raise ValidationError("This schedule already exists for the professional user.")
     def __str__(self):
         return f"{self.pro_gofer.custom_user.first_name} available on {self.day} from {self.from_hour} to {self.to_hour}"
 

@@ -37,7 +37,7 @@ class TransferFundsSerializer(serializers.Serializer):
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ['id', 'gofer', 'day', 'from_hour', 'to_hour', 'duration', 'created_at', 'updated_at']
+        fields = ['id', 'pro_gofer', 'day', 'from_hour', 'to_hour', 'created_at', 'updated_at']
 
 
     def create(self, validated_data):

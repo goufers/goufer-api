@@ -68,6 +68,18 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
     
+
+    @property
+    def user_type(self):
+        if hasattr(self, 'gofer'):
+            return 'Gofer'
+        elif hasattr(self, 'pro_gofer'):
+            return 'ProGofer'
+        elif hasattr(self, 'errand_boy'):
+            return 'ErrandBoy'
+        elif hasattr(self, 'message_poster'):
+            return 'MessagePoster'
+        return 'Anonymous'
     def __str__(self) -> str:
         return self.email
 
@@ -160,7 +172,7 @@ class ProGofer(models.Model):
         Artist= 'Artist'
 
 
-    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofers')
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofer')
     bio = models.TextField(blank=True, null=True)
     profession = models.CharField(max_length=255)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
