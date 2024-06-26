@@ -1,21 +1,27 @@
+import re
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
-from goufer import settings
-from .models import CustomUser
+from django.conf import settings
+from .models import CustomUser, Gofer, MOBILILTY_CHOICES
+from main.models import SubCategory, Location
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, renderer_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.viewsets import ModelViewSet
 from main.serializers import LocationSerializer
-from .serializers import CustomUserSerializer, UpdateProfileSerializer
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .serializers import CustomUserSerializer, UpdateProfileSerializer, GoferSerializer
 from . import utils
 from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, ModelChoiceFilter, ChoiceFilter, NumberFilter
+
 
 
 @api_view(['POST'])
@@ -30,12 +36,13 @@ def register_user(request):
     serializer = CustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        wallet = Wallet.objects.create(user=user)
+        wallet = Wallet.objects.create(custom_user=user)
         wallet.save()
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
+            'auth_status': str(user.is_authenticated)
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -75,24 +82,27 @@ def send_verification_email(request):
     user = request.user
     if user.email_verified:
         return Response({"detail": "Email already verified."}, status=status.HTTP_400_BAD_REQUEST)
-    # Generate verification token
-    token = default_token_generator.make_token(user)
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    verification_link = request.build_absolute_uri(
-        reverse(viewname='verify_email', kwargs={'uidb64': uid, 'token': token})
-    )
-    try:
-        # Send verification email
-        send_mail(
-            'Verify your email address',
-            f'Click the link to verify your email address: {verification_link}',
-            settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False,
+    if user.email == request.data['email']:
+        # Generate verification token
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        verification_link = request.build_absolute_uri(
+            reverse(viewname='verify_email', kwargs={'uidb64': uid, 'token': token})
         )
-        return Response({"detail": "Email successfully sent"}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Send verification email
+            send_mail(
+                'Verify your email address',
+                f'Click the link to verify your email address: {verification_link}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            return Response({"detail": "Email successfully sent"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'detail': 'Invalid email address'}, status=status.HTTP_400_BAD_REQUEST)
     
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
@@ -109,7 +119,8 @@ def verify_email(request, uidb64, token):
         return Response({'detail': 'Email verified successfully'}, status=status.HTTP_200_OK)
     else:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-@api_view(['POST', 'GET'])
+    
+@api_view(['POST'])
 def login_user(request):
     '''
     Login a user
@@ -180,3 +191,39 @@ def UpdateProfile(request):
     
     return Response(updated_user.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class GoferFilterSet(FilterSet):
+    sub_category = ModelChoiceFilter(queryset=SubCategory.objects.all())
+    location = ModelChoiceFilter(queryset=Location.objects.all())
+    mobility_means = ChoiceFilter(choices=MOBILILTY_CHOICES)
+    high_charges = NumberFilter(field_name='charges', lookup_expr='gt')
+    low_charges = NumberFilter(field_name='charges', lookup_expr='lt')
+    class Meta:
+        model = Gofer
+        fields = {
+            'sub_category', 'location',
+            'expertise', 'mobility_means'
+        }
+
+class GoferViewset(ModelViewSet):
+    queryset = Gofer.objects.all()
+    serializer_class = GoferSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GoferFilterSet
+    search_fields = ['$bio', 'mobility_means', 'expertise']
+    ordering_fields = ['mobility_means', 'charges']
+        
+    def update(self, request, pk):
+        gofer = Gofer.objects.get(id=pk)
+        serializer = GoferSerializer(data=request.data, instance=gofer, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+    
