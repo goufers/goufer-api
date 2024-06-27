@@ -78,9 +78,3 @@ class ErrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ['created_at','updated_at']
 
-class GoferSerializer(serializers.ModelSerializer):
-    sub_category = SubCategorySerializer()
-    documents = GoferDocumentSerializer(many=True, read_only=True)
-    class Meta:
-        model = Gofer
-        fields = ['id', 'custom_user', 'expertise', 'bio', 'sub_category', 'charges', 'documents']
