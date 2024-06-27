@@ -63,13 +63,7 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = "__all__"
-        
-
-   
-    
-
-    
-    
+         
 
 
 class ErrandSerializer(serializers.ModelSerializer):
@@ -78,3 +72,23 @@ class ErrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ['created_at','updated_at']
 
+
+class ErrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Errand
+        fields = ['id', 'user', 'task_description', 'sub_category', 'gofer', 'estimated_duration', 'status', 'created_at', 'updated_at', 'errand_accepted']
+        read_only_fields = ['user', 'status', 'created_at', 'updated_at', 'errand_accepted']
+
+    def update(self, instance, validated_data):
+        if 'errand_accepted' in validated_data and validated_data['errand_accepted'] is not None:
+            instance.errand_accepted = validated_data['errand_accepted']
+            if instance.errand_accepted:
+                instance.status = "Ongoing"
+            else:
+                instance.status = "Terminated"
+        instance.task_description = validated_data.get('task_description', instance.task_description)
+        instance.sub_category = validated_data.get('sub_category', instance.sub_category)
+        instance.estimated_duration = validated_data.get('estimated_duration', instance.estimated_duration)
+        instance.save()
+        return instance
+    

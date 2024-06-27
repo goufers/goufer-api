@@ -1,12 +1,15 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import CategorySerializer, ErrandBoyDocumentSerializer, GoferDocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer, VendorDocumentSerializer
+from main.serializers import CategorySerializer, ErrandBoyDocumentSerializer, GoferDocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer, VendorDocumentSerializer, ErrandSerializer
 from user.models import ErrandBoy, Gofer, Vendor
+from user.models import Errand
 from .models import Category, ErrandBoyDocument, GoferDocument, Location, SubCategory, Reviews, VendorDocument, MessagePoster
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 
 
 
@@ -141,7 +144,71 @@ class ReviewsViewSet(ModelViewSet):
         if self.request.method in ['PUT', 'DELETE', 'PATCH']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
+
+class ErrandViewSet(ModelViewSet):
+    serializer_class = ErrandSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Errand.objects.all()
     
+    """perform_create sets the user field to the currently 
+    authenticated user and initializes the status to "Ongoing"."""
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user, status="Ongoing")
+
+    """The update method checks if the requester is either the user who created the errand
+      or the gofer assigned to it and allows them to update the errand accordingly."""
+    def update(self, request, *args, **kwargs):
+        errand = self.get_object()
+        if request.user == errand.gofer.custom_user:
+            serializer = self.get_serializer(errand, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+
+    """The destroy method allows only the user who created the errand to delete it."""
+    def destroy(self, request, *args, **kwargs):
+        errand = self.get_object()
+        if request.user == errand.user:
+            return super().destroy(request, *args, **kwargs)
+        return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+
+    """perform_update method calls the save method of the serializer to apply the changes"""
+    def perform_update(self, serializer):
+        serializer.save()
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     return Errand.objects.filter(user=user)    
     
 
     
@@ -229,21 +296,3 @@ class ReviewsViewSet(ModelViewSet):
 #         if self.request.method in ['PUT', 'DELETE', 'PATCH']:
 #             return [IsAdminUser()]
 #         return [IsAuthenticated()]
-
-
-# class ErrandViewSet(ModelViewSet):
-#     serializer_class = ErrandSerializer
-    
-#     def get_permissions(self):
-#         if self.request.method in ['PUT', 'DELETE', 'PATCH']:
-#             return [IsAdminUser()]
-#         return [IsAuthenticated()]
-
-#     def get_queryset(self):
-#         user = self.request.user
-#         return Errand.objects.filter(user=user)
-
-# class GoferViewSet(ModelViewSet):
-#     queryset = Gofer.objects.all()
-#     serializer_class = GoferSerializer
-#     permission_classes = [IsAuthenticated]

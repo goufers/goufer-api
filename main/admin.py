@@ -96,7 +96,7 @@ class GoferAdmin(admin.ModelAdmin):
 
 @admin.register(Errand) 
 class ErrandAdmin(admin.ModelAdmin):
-    list_display = ['user', 'task_description', 'sub_category', 'gofer', 'estimated_duration', 'status']
+    list_display = ['user', 'task_description', 'sub_category', 'gofer', 'estimated_duration', 'status', 'errand_accepted']
     search_fields = ['user', 'gofer', 'sub_category']
     list_filter = ['user', 'gofer', 'sub_category']
     list_per_page = 10

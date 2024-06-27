@@ -2,9 +2,8 @@ from rest_framework_nested import routers
 from user.errand_boy_views import ErrandBoyViewset
 from user.vendor_views import VendorViewSet
 from pprint import pprint
-
 from user.views import GoferViewset
-from .views import CategoryViewSet, ErrandBoyDocumentViewSet, GoferDocumentViewSet, LocationViewSet, MessagePosterViewSet, ReviewsViewSet, SubCategoryViewSet, VendorDocumentViewSet
+from .views import CategoryViewSet, ErrandBoyDocumentViewSet, GoferDocumentViewSet, LocationViewSet, MessagePosterViewSet, ReviewsViewSet, SubCategoryViewSet, VendorDocumentViewSet, ErrandViewSet
 
 router = routers.DefaultRouter()
 
@@ -34,5 +33,10 @@ gofer_router.register('document', GoferDocumentViewSet, basename='gofer_document
 gofer_reviews_router = routers.NestedDefaultRouter(router, 'gofers', lookup = 'gofer')
 gofer_reviews_router.register('review', ReviewsViewSet, basename = 'gofer_review')
 
+gofer_errand_router = routers.NestedDefaultRouter(router, 'gofers', lookup = 'gofer')
+gofer_errand_router.register('errand', ErrandViewSet, basename ='gofer_errand')
 
-urlpatterns = router.urls + category_router.urls + vendor_router.urls + errand_boy_router.urls + gofer_router.urls
+
+
+
+urlpatterns = router.urls + category_router.urls + vendor_router.urls + errand_boy_router.urls + gofer_router.urls + gofer_reviews_router.urls + gofer_errand_router.urls
