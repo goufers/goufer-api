@@ -31,5 +31,8 @@ vendor_router.register('document', ErrandBoyDocumentViewSet, basename='errandboy
 gofer_router = routers.NestedDefaultRouter(router, 'gofers', lookup='gofer')
 gofer_router.register('document', GoferDocumentViewSet, basename='gofer_document')
 
+gofer_reviews_router = routers.NestedDefaultRouter(router, 'gofers', lookup = 'gofer')
+gofer_reviews_router.register('review', ReviewsViewSet, basename = 'gofer_review')
+
 
 urlpatterns = router.urls + category_router.urls + vendor_router.urls + errand_boy_router.urls + gofer_router.urls
