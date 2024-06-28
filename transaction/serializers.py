@@ -71,7 +71,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
-    schedule = ScheduleSerializer()
     
     class Meta:
         model = Booking

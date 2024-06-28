@@ -192,8 +192,7 @@ class BookingViewSet(ModelViewSet):
     def perform_create(self, serializer):
         message_poster = get_object_or_404(MessagePoster, pk=self.request.data.get('message_poster'))
         pro_gofer = get_object_or_404(ProGofer, pk=self.request.data.get('pro_gofer'))
-        schedule = get_object_or_404(Schedule, pk=self.request.data.get('schedule').get('id'))
-        print(schedule)
+        schedule = get_object_or_404(Schedule, pk=self.request.data.get('schedule'))
         duration = int(self.request.data.get('duration')) if self.request.data['duration'] else 1
         serializer.save(message_poster=message_poster, pro_gofer=pro_gofer, schedule=schedule, duration=duration)
 
