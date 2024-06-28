@@ -1,6 +1,6 @@
 from django.db import models
-from user.models import CustomUser, Gofer
-from django.utils import timezone
+from user.models import CustomUser, ProGofer
+from main.models import MessagePoster
 import bcrypt
 from django.utils.translation import gettext_lazy as _
 
@@ -68,7 +68,7 @@ class Schedule(models.Model):
         ('Sun', 'Sunday'),
     ]
 
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='schedules')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedules')
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
     from_hour = models.CharField(max_length=10, choices=generate_hour_choices())
     to_hour = models.CharField(max_length=10, choices=generate_hour_choices())
@@ -79,42 +79,21 @@ class Schedule(models.Model):
         ordering = ['day', '-created_at']
 
     def __str__(self):
-        return f"{self.gofer.custom_user.first_name} available on {self.day} from {self.from_hour} to {self.to_hour}"
+        return f"{self.pro_gofer.custom_user.first_name} available on {self.day} from {self.from_hour} to {self.to_hour}"
 
 
 class Booking(models.Model):
     """User-Professional booking"""
     BOOKING_CHOICES = [('Active', 'Active'), ('Terminated', 'Terminated'), ('Settled', 'Settled'), ('Pending Approval', 'Pending Approval')]
-    custom_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='bookings')
-    gofer = models.ForeignKey('ProGofer', on_delete=models.CASCADE, related_name='bookings')
+    message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='bookings')
     duration = models.PositiveSmallIntegerField(_('How long in hours?'), default=1)
     is_active = models.BooleanField(default=True)
-    status = models.CharField(max_length=20, choices=BOOKING_CHOICES, default='Pending')
-    comment = models.TextField(blank=True, null=True)  # For gofer's comment on decline
+    status = models.CharField(max_length=20, choices=BOOKING_CHOICES, default='Pending Approval')
+    comment = models.TextField(blank=True, null=True)  # For pro_gofer's comment on decline
     booked_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.custom_user.first_name} booked {self.gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"
-
-
-class ProGofer(models.Model):
-    """Special Gofers"""
-    class ProfessionChoices(models.TextChoices):
-        Doctor = 'Doctor'
-        Lawyer = 'Lawyer'
-        Artist= 'Artist'
-
-
-    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofers')
-    bio = models.TextField(blank=True, null=True)
-    profession = models.CharField(max_length=255)
-    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    is_verified = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f'{self.custom_user.first_name} - {self.profession}'
-    
+        return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"

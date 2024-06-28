@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CustomUser, Gofer, Vendor, ErrandBoy, MessagePoster
+from .models import CustomUser, Gofer, Vendor, ErrandBoy
+from main.models import MessagePoster
 
 
 class CustomUserAdmin(admin.ModelAdmin):
@@ -22,6 +23,12 @@ class ErrandBoyAdmin(admin.ModelAdmin):
     list_display = ['user', 'mobility_means', 'charges']
     search_fields = ['user', 'mobility_means', 'charges']
     list_filter = ["mobility_means"]
+
+@admin.register(MessagePoster)
+class MessagePosterAdmin(admin.ModelAdmin):
+    list_display = ['custom_user']
+    search_fields = ['custom_user']
+    list_filter = ["custom_user"]
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Gofer, GoferAdmin)
