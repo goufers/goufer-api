@@ -1,5 +1,6 @@
 from django.urls import path 
 from . import views, password_reset_views
+from rest_framework import routers
 
 urlpatterns = [
     path('register/', views.register_user, name='register-user'),
@@ -14,4 +15,7 @@ urlpatterns = [
     path('password_reset_confirm/<uid>/<token>/', password_reset_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 ]
 
+router = routers.DefaultRouter()
+router.register('gofers', views.GoferViewset, basename='gofer')
 
+urlpatterns += router.urls
