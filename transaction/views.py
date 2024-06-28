@@ -1,6 +1,7 @@
 # views.py
 
 from rest_framework import generics, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import (
     IsAuthenticated, IsAdminUser,
@@ -21,7 +22,7 @@ import requests
 from decimal import Decimal
 from django.conf import settings
 from rest_framework.views import APIView
-from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
 from user.models import CustomUser, Gofer
 from django.db.models import Count
 
@@ -67,7 +68,7 @@ class FundWalletView(APIView):
         }
         response = requests.get(url, headers=headers)
         response_data = response.json()
-        print(response_data)
+        # print(response_data)
         if response_data['status']:
             amount = response_data['data']['amount'] / 100  # Convert from kobo to naira
             wallet = Wallet.objects.filter(custom_user=request.user).first()
@@ -151,137 +152,129 @@ class TransactionListView(APIView):
         transactions = Transaction.objects.filter(wallet__user=request.user).order_by('-created_at')
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
-class ScheduleView(APIView):
-    """Create a new schedule"""
+
+class ScheduleViewSet(ModelViewSet):
+    """ViewSet for managing schedules"""
+    serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
-    def post(self, request):
-        if not request.user.user_type == 'ProGofer':
-            return Response({'error': 'Sorry, you do not have permission to create schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        
-        user = get_object_or_404(ProGofer, custom_user__pk=request.user.pk)
-        data = request.data
-        data['pro_gofer'] = user.pk
-        serializer = ScheduleSerializer(data=data)
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk):
-        """Update a schedule"""
-        if not request.user.user_type == 'ProGofer':
-            return Response({'error': 'Sorry, you do not have permission to update schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        user = get_object_or_404(ProGofer, custom_user__pk=request.user.pk)
-        schedule = get_object_or_404(Schedule, pk=pk)
-        data = request.data
-        data['pro_gofer'] = user.pk
-        serializer = ScheduleSerializer(schedule, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, pk):
-        """Delete a schedule"""
-        if not request.user.user_type == 'ProGofer':
-            return Response({'error': 'Sorry, you do not have permission to delete schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        schedule = get_object_or_404(Schedule, pk=pk)
-        schedule.delete()
-        return Response({'message': 'Schedule deleted successfully.'}, status=status.HTTP_200_OK)
-
-class ScheduleListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        """List schedules for the authenticated user"""
-        if not request.user.user_type == 'ProGofer':
-            return Response({'error': 'Sorry, you do not have permission to view schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        user = get_object_or_404(ProGofer, custom_user=request.user)
-        schedules = Schedule.objects.filter(pro_gofer=user)
-        serializer = ScheduleSerializer(schedules, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class BookingCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        message_poster = request.user
-        pro_gofer = get_object_or_404(ProGofer, pk=request.data.get('gofer_id'))
-        schedule = get_object_or_404(Schedule, pk=request.data.get('schedule_id'))
-        duration = int(request.data.get('duration', 1))
-
-        data = {
-            'message_poster': message_poster.id,
-            'pro_gofer': pro_gofer.id,
-            'schedule': schedule.id,
-            'duration': duration
-        }
-
-        serializer = BookingSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class BookingListView(generics.ListAPIView):
-    """List Bookings for a given progofer"""
-    permission_classes = [IsAuthenticated]
-    serializer_class = BookingSerializer
 
     def get_queryset(self):
-        if isinstance(self.request.user, MessagePoster):
-            return Booking.objects.filter(message_poster=self.request.user)
-        return Booking.objects.filter(pro_gofer=self.kwargs.get('pk'))
+        if not self.request.user.user_type == 'ProGofer':
+            return Schedule.objects.none()
+        user = get_object_or_404(ProGofer, custom_user=self.request.user)
+        return Schedule.objects.filter(pro_gofer=user)
+
+    def perform_create(self, serializer):
+        user = get_object_or_404(ProGofer, custom_user=self.request.user)
+        serializer.save(pro_gofer=user)
+    
+    def perform_update(self, serializer):
+        user = get_object_or_404(ProGofer, custom_user=self.request.user)
+        serializer.save(pro_gofer=user)
 
 
-class BookingUpdateView(generics.UpdateAPIView):
-    queryset = Booking.objects.all()
+class BookingViewSet(ModelViewSet):
+    # queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user, status='Pending')
+        user = get_object_or_404(CustomUser, pk=self.request.user.pk)
 
+        if user.user_type == 'MessagePoster':
+            return Booking.objects.filter(message_poster=user)
+        elif user.user_type == 'ProGofer':
+            pro_gofer = get_object_or_404(ProGofer, custom_user=user)
+            return Booking.objects.filter(pro_gofer=pro_gofer)
+        return Booking.objects.none()
 
-class BookingCancelView(generics.DestroyAPIView):
-    queryset = Booking.objects.all()
-    permission_classes = [IsAuthenticated]
+    def perform_create(self, serializer):
+        message_poster = get_object_or_404(MessagePoster, pk=self.request.data.get('message_poster'))
+        pro_gofer = get_object_or_404(ProGofer, pk=self.request.data.get('pro_gofer'))
+        schedule = get_object_or_404(Schedule, pk=self.request.data.get('schedule').get('id'))
+        print(schedule)
+        duration = int(self.request.data.get('duration')) if self.request.data['duration'] else 1
+        serializer.save(message_poster=message_poster, pro_gofer=pro_gofer, schedule=schedule, duration=duration)
 
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user, status='Pending')
+    def perform_update(self, serializer):
+        user = self.request.user
+        if user.user_type == 'ProGofer':
+            pro_gofer = get_object_or_404(ProGofer, custom_user=user)
+            serializer.save(pro_gofer=pro_gofer)
+        else:
+            serializer.save()
 
-    def perform_destroy(self, instance):
-        instance.status = 'Terminated'
-        instance.save()
-
-
-class BookingAcceptView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
-        if booking.gofer.user == request.user:
-            booking.status = 'Accepted'
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def accept(self, request, pk=None):
+        """Accept a user's booking"""
+        booking = get_object_or_404(Booking, pk=pk)
+        if booking.pro_gofer.custom_user == request.user:
+            booking.status = 'Active'
             booking.save()
             return Response({'status': 'Booking accepted.'}, status=status.HTTP_200_OK)
         return Response({'error': 'You are not authorized to accept this booking.'}, status=status.HTTP_403_FORBIDDEN)
 
-
-class BookingDeclineView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def decline(self, request, pk=None):
+        """decline a booking"""
+        booking = get_object_or_404(Booking, pk=pk)
+        pro_gofer = get_object_or_404(ProGofer, custom_user=booking.pro_gofer.custom_user)
         comment = request.data.get('comment', '')
-        if booking.gofer.user == request.user:
+        if booking.pro_gofer.custom_user == request.user:
             booking.status = 'Declined'
             booking.comment = comment
             booking.save()
+            pro_gofer.maximum_bookings += 1
+            pro_gofer.save()
             return Response({'status': 'Booking declined.'}, status=status.HTTP_200_OK)
         return Response({'error': 'You are not authorized to decline this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def cancel(self, request, pk=None):
+        """Terminate a booking"""
+        booking = get_object_or_404(Booking, pk=pk)
+        pro_gofer = get_object_or_404(ProGofer, custom_user=booking.pro_gofer.custom_user)
+        if booking.message_poster == request.user and booking.status == 'Pending Approval':
+            booking.status = 'Cancelled'
+            booking.save()
+            pro_gofer.maximum_bookings += 1
+            return Response({'status': 'Booking canceled.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to cancel this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def initiate_termination(self, request, pk=None):
+        """ Initiate termination for a previously accepted booking"""
+        booking = get_object_or_404(Booking, pk=pk)
+        comment = request.data.get('comment', '')
+        if booking.pro_gofer.custom_user == request.user and booking.status == 'Active':
+            booking.status = 'Pending Termination'
+            booking.comment = comment
+            booking.save()
+            return Response({'status': f'Termination approval sent to {booking.message_poster.custom_user.first_name}'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to reject this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def approve_termination(self, request, pk=None):
+        """Terminate a booking"""
+        booking = get_object_or_404(Booking, pk=pk)
+        pro_gofer = get_object_or_404(ProGofer, custom_user=booking.pro_gofer.custom_user)
+        if booking.message_poster == request.user and booking.status == 'Pending Termination':
+            booking.status = 'Terminated'
+            booking.save()
+            pro_gofer.maximum_bookings += 1
+            pro_gofer.save()
+            return Response({'status': 'Booking terminated.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to terminate this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def settle(self, request, pk=None):
+        """Indicates that the booking has been successfully settled"""
+        booking = get_object_or_404(Booking, pk=pk)
+        pro_gofer = get_object_or_404(ProGofer, custom_user=booking.pro_gofer.custom_user)
+        if booking.pro_gofer.custom_user == request.user or booking.message_poster == request.user:
+            booking.status = 'Settled'
+            booking.save()
+            pro_gofer.maximum_bookings += 1
+            return Response({'status': 'Booking settled.'}, status=status.HTTP_200_OK)
+        return Response({'error': 'You are not authorized to settle this booking.'}, status=status.HTTP_403_FORBIDDEN)

@@ -26,7 +26,7 @@ class ErrandBoyAdmin(admin.ModelAdmin):
 
 @admin.register(MessagePoster)
 class MessagePosterAdmin(admin.ModelAdmin):
-    list_display = ['custom_user']
+    list_display = ["id", 'custom_user']
     search_fields = ['custom_user']
     list_filter = ["custom_user"]
 

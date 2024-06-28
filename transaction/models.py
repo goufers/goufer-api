@@ -73,6 +73,7 @@ class Schedule(models.Model):
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
     from_hour = models.CharField(max_length=10, choices=generate_hour_choices())
     to_hour = models.CharField(max_length=10, choices=generate_hour_choices())
+    maximum_bookings = models.IntegerField(null=True, blank=True, default=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,7 +93,14 @@ class Schedule(models.Model):
 
 class Booking(models.Model):
     """User-Professional booking"""
-    BOOKING_CHOICES = [('Active', 'Active'), ('Terminated', 'Terminated'), ('Settled', 'Settled'), ('Pending Approval', 'Pending Approval')]
+    BOOKING_CHOICES = [
+        ('Active', 'Active'), 
+        ('Terminated', 'Terminated'), # Only active booking
+        ('Settled', 'Settled'), 
+        ('Pending Approval', 'Pending Approval'),
+        ('Declined', 'Declined'),
+        ('Cancelled', 'Cancelled'), # A user can cancel
+        ]
     message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings')
     pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='bookings')

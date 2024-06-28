@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Wallet, Transaction, Schedule, ProGofer, Booking
+from .models import Bank, Wallet, Transaction, Schedule, ProGofer, Booking, MessagePoster
 
 
 class ScheduleAdmin(admin.ModelAdmin):
