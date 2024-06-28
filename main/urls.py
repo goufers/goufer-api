@@ -1,7 +1,6 @@
 from rest_framework_nested import routers
 from user.errand_boy_views import ErrandBoyViewset
 from user.vendor_views import VendorViewSet
-from pprint import pprint
 
 from user.views import GoferViewset
 from .views import CategoryViewSet, ErrandBoyDocumentViewSet, GoferDocumentViewSet, LocationViewSet, MessagePosterViewSet, ReviewsViewSet, SubCategoryViewSet, VendorDocumentViewSet

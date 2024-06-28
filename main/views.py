@@ -83,23 +83,14 @@ class ErrandBoyDocumentViewSet(ModelViewSet):
     
     
 class MessagePosterViewSet(ModelViewSet):
+    queryset = MessagePoster.objects.all()
     serializer_class = MessagePosterSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['custom_user__first_name']
     search_fields = ['custom_user__first_name']
+    permission_classes = [IsAuthenticated]
     
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
-    
-    def get_queryset(self):
-        user = self.request.user
-        logged_in_message_poster_id = MessagePoster.objects.only('id').get(custom_user=user)
-        if self.request.user.is_staff:
-            return MessagePoster.objects.all()
-        return MessagePoster.objects.filter(id=logged_in_message_poster_id)
     
     
 class LocationViewSet(ModelViewSet):
