@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
 from .models import Conversation, ChatMessage
 from .serializers import ConversationSerializer, ChatMessageSerializer
-from user.models import Gofer, CustomUser
+from user.models import Gofer, MessagePoster
 
 class ChatRoomListCreate(generics.ListCreateAPIView):
     queryset = Conversation.objects.all()
@@ -32,7 +32,7 @@ class ChatMessageDetail(generics.RetrieveUpdateDestroyAPIView):
 def gofers_list(request):
     user = request.user
     gofers = Gofer.objects.annotate(order=F('id'))
-    users = CustomUser.objects.all()
+    users = MessagePoster.objects.all()
 
     try:
         gofer = Gofer.objects.get(user=user.id)
@@ -46,7 +46,7 @@ def gofers_list(request):
         'chat_rooms': chat_rooms.values()
     })
 
-@api_view(['POST'])
+@api_view(['POST',])
 @permission_classes([permissions.IsAuthenticated])
 def create_chat_room(request, gofer_id):
     user = request.user
