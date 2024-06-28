@@ -1,26 +1,35 @@
-# chat/consumers.py
-
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from .models import ChatMessage, Conversation
 from django.shortcuts import get_object_or_404
 from asgiref.sync import sync_to_async
 
+logger = logging.getLogger(__name__)
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
 
-        # Join room group
+        logger.info(f"User {self.scope['user']} attempting to connect to room {self.room_id}")
+
+        # Check if the user is authenticated
+        if self.scope["user"].is_anonymous:
+            logger.warning("Anonymous user attempting to connect. Rejecting connection.")
+            await self.close()
+            return
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
 
         await self.accept()
+        logger.info(f"User {self.scope['user']} connected to room {self.room_id}")
 
     async def disconnect(self, close_code):
-        # Leave room group
+        logger.info(f"User {self.scope['user']} disconnecting from room {self.room_id}")
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -29,30 +38,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message = data['message']
-        
-        # Get authenticated user from scope
-        user = self.scope['user']
 
-        # Ensure room exists before saving message
+        user = self.scope['user']
+        logger.info(f"Message received from user {user}: {message}")
+
         room = await self.get_room(self.room_id)
         if not room:
-            return  # Optionally handle case where room does not exist
-        
-        # Save message to database
+            logger.warning(f"Room {self.room_id} not found")
+            return
+
         await self.save_message(room, user, message)
 
-        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
                 'message': message,
-                'sender': user.username,  # Use username as sender for simplicity
+                'sender': user.username,
             }
         )
 
     async def chat_message(self, event):
-        # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': event['message'],
             'sender': event['sender'],
