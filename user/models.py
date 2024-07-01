@@ -124,7 +124,7 @@ class Errand(models.Model):
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.CASCADE)
     gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='errands')
     estimated_duration = models.IntegerField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=ERRAND_STATUS, default="O")
+    status = models.CharField(max_length=20, choices=ERRAND_STATUS, default="Ongoing")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     errand_accepted = models.BooleanField(default=False)

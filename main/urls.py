@@ -31,7 +31,7 @@ gofer_router = routers.NestedDefaultRouter(router, 'gofers', lookup='gofer')
 gofer_router.register('document', GoferDocumentViewSet, basename='gofer_document')
 
 gofer_reviews_router = routers.NestedDefaultRouter(router, 'gofers', lookup = 'gofer')
-gofer_reviews_router.register('review', ReviewsViewSet, basename = 'gofer_review')
+gofer_reviews_router.register('reviews', ReviewsViewSet, basename = 'gofer_review')
 
 gofer_errand_router = routers.NestedDefaultRouter(router, 'gofers', lookup = 'gofer')
 gofer_errand_router.register('errand', ErrandViewSet, basename ='gofer_errand')

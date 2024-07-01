@@ -7,7 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
-from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer, ProGoferDocumentSerializer
+from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, LocationSerializer, VendorDocumentSerializer, ProGoferDocumentSerializer
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 
@@ -86,9 +86,10 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 
 class GoferSerializer(serializers.ModelSerializer):
     documents = GoferDocumentSerializer(many=True, read_only=True)
+    location = LocationSerializer()
     class Meta:
         model = Gofer
-        fields = "__all__"
+        fields = ['id', 'custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'location']
 
 
 class ProGoferSerializer(serializers.ModelSerializer):

@@ -137,17 +137,20 @@ class ReviewsViewSet(ModelViewSet):
     serializer_class = ReviewsSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['user_id', 'gofer_id', 'rating']
+    filterset_fields = ['message_poster', 'gofer_id', 'rating']
     search_fields = ['gofer_id', 'rating']
+
+    def get_serializer_context(self):
+        return {'gofer_id': self.kwargs['gofer_pk']}
     
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
+    # def get_permissions(self):
+    #     if self.request.method in ['PUT', 'DELETE', 'PATCH']:
+    #         return [IsAdminUser()]
+    #     return [IsAuthenticated()]
 
 class ErrandViewSet(ModelViewSet):
     serializer_class = ErrandSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     queryset = Errand.objects.all()
     
     """perform_create sets the user field to the currently 
@@ -177,19 +180,6 @@ class ErrandViewSet(ModelViewSet):
     def perform_update(self, serializer):
         serializer.save()
     
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

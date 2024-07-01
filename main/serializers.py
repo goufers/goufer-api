@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument, ProGoferDocument, MessagePoster 
+from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument, ProGoferDocument, MessagePoster, Address
 
 from .models import Category, Document, SubCategory, Reviews, Location 
 from user.models import Gofer, Errand, CustomUser
@@ -55,7 +55,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        gofer_id = self.context["gofer_id"]
+        gofer_id = self.context['gofer_id']
         return Reviews.objects.create(gofer_id=gofer_id, **validated_data)
 
 
@@ -92,3 +92,7 @@ class ErrandSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['house_number', 'street', 'city', 'state', 'country']

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from user.models import Errand, Gofer
-from .models import ErrandBoyDocument, GoferDocument, Location, Category, SubCategory, Reviews, VendorDocument
+from .models import ErrandBoyDocument, GoferDocument, Location, Category, SubCategory, Reviews, VendorDocument, Address
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
 from django.urls import reverse
@@ -11,9 +11,8 @@ from django.urls import reverse
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ['latitude', 'longitude', 'address', 'state', 'country']
+    list_display = ['latitude', 'longitude',]
     search_fields = ['address', 'state', 'country']
-    list_filter = ['state', 'country']
     list_per_page = 10
      
      
@@ -83,7 +82,7 @@ class ReviewsAdmin(admin.ModelAdmin):
     search_fields = ['user__istartswith', 'gofer__istartswith', 'rating ']
     list_filter = ['message_poster', 'gofer', 'rating', 'date']
     list_per_page = 10
-    list_select_related = ['user', 'gofer']
+    list_select_related = ['message_poster', 'gofer']
     
 @admin.register(Gofer)
 class GoferAdmin(admin.ModelAdmin):
@@ -101,3 +100,10 @@ class ErrandAdmin(admin.ModelAdmin):
     list_filter = ['user', 'gofer', 'sub_category']
     list_per_page = 10
     list_select_related =['user', 'gofer']
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ['house_number', 'street', 'city', 'state', 'country']
+    search_fields = ['state', 'country']
+    list_filter = ['state', 'country']
+    # list_select_related = ['state', 'country']
