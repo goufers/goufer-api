@@ -1,6 +1,6 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import ErrandBoy, Gofer, Vendor, ProGofer, CustomUser
+from user.models import Gofer, CustomUser
 from django.core.validators import FileExtensionValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -10,12 +10,16 @@ from django.dispatch import receiver
 class Location(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    address = models.CharField(max_length=200)
-    state = models.CharField(max_length=50)
-    country = models.CharField(max_length=50)
     
     def __str__(self) -> str:
-        return self.address
+        return f"Gofer at {self.latitude}, {self.longitude}"
+    
+class Address(models.Model):
+    house_number = models.CharField(max_length=10)
+    street = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=50)
+    country = models.CharField(max_length=50)
 
 class Category(models.Model):
     CATEGORY_CHOICES = (
@@ -53,36 +57,17 @@ class Document(models.Model):
         ('ssn', 'SSN'),
         ('nin', 'NIN')
     )
-    
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="documents")
     document_type = models.CharField(max_length=5, choices=DOCUMENT_CHOICES)
     document_number = models.CharField(max_length=11, unique=True)
+    document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
     uploaded_at = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
     
     
     def __str__(self) -> str:
         return self.document_type
-    
-    
-class GoferDocument(Document):
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name="documents" )
-    document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    
-    
-    def __str__(self) -> str:
-        return f"{self.document_of_expertise} for gofer"
-    
-    
-class VendorDocument(Document):
-    
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="documents" )
-    document_of_expertise = models.FileField(upload_to='main/documents', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
-    
-    def __str__(self) -> str:
-        return f"{self.document_of_expertise} for vendor"
-class ErrandBoyDocument(Document):
-    errand_boy = models.ForeignKey(ErrandBoy, on_delete=models.CASCADE, related_name="documents" )
-    
+
     
 
 class MessagePoster(models.Model):
@@ -104,10 +89,5 @@ def update_gofer_rating(sender, instance, **kwargs):
     instance.gofer.update_rating()
     
     def __str__(self) -> str:
-        return f"This is the review of {self.gofer}"
+        return f"This is the review of {self.reviews.gofer}"
 
-
-    
-class ProGoferDocument(Document):
-    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name="documents")
-    document_of_expertise = models.FileField(upload_to='main/documents/pro_gofer', validators=[validate_file_size, FileExtensionValidator(allowed_extensions=['jpg', 'png', 'pdf'])])
