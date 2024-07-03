@@ -4,7 +4,7 @@ db.sqlite3
 __pycache__/
 *.py[cod]
 *$py.class
-# migrations/
+migrations/
 # C extensions
 *.so
 
@@ -101,7 +101,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-#.env
+.env
 .venv
 env/
 venv/

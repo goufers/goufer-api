@@ -13,6 +13,7 @@ urlpatterns = [
     path('verify-email/<uidb64>/<token>/', views.verify_email, name='verify_email'),
     path('password_reset/', password_reset_views.PasswordResetRequestView.as_view(), name='password_reset'),
     path('password_reset_confirm/<uid>/<token>/', password_reset_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('toggle-available/<int:gofer_id>/', views.ToggleAvailability, name='toggle_available'),
 ]
 
 router = routers.DefaultRouter()
