@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import CategorySerializer, ErrandBoyDocumentSerializer, GoferDocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer, VendorDocumentSerializer
+from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer
 from user.models import ErrandBoy, Gofer, Vendor
-from .models import Category, ErrandBoyDocument, GoferDocument, Location, SubCategory, Reviews, VendorDocument, MessagePoster
+from .models import Address, Category, Document, Location, SubCategory, Reviews, MessagePoster
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
@@ -22,8 +22,8 @@ class CategoryViewSet(ModelViewSet):
             return [IsAdminUser()]
         return [AllowAny()]
         
-class GoferDocumentViewSet(ModelViewSet):
-    serializer_class = GoferDocumentSerializer
+class DocumentViewSet(ModelViewSet):
+    serializer_class = DocumentSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['document_type']
@@ -35,51 +35,14 @@ class GoferDocumentViewSet(ModelViewSet):
         return [IsAuthenticated()]
     
     def get_queryset(self):
-        user = self.request.user
-        logged_in_gofer = Gofer.objects.only('id').get(custom_user=user)
+        currently_logged_in_user = self.request.user
         if self.request.user.is_staff:
-            return GoferDocument.objects.all()
-        return GoferDocument.objects.filter(gofer_id=logged_in_gofer)
+            return Document.objects.all()
+        return Document.objects.filter(user=currently_logged_in_user)
     
+    def get_serializer_context(self):
+        return {"currently_logged_in_user_id": self.request.user.id}
     
-class VendorDocumentViewSet(ModelViewSet):
-    serializer_class = VendorDocumentSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['document_type']
-    search_fields = ['document_type']
-    
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
-    
-    def get_queryset(self):
-        user = self.request.user
-        logged_in_vendor = Vendor.objects.only('id').get(custom_user=user)
-        if self.request.user.is_staff:
-            return VendorDocument.objects.all()
-        return VendorDocument.objects.filter(vendor_id=logged_in_vendor)
-    
-    
-class ErrandBoyDocumentViewSet(ModelViewSet):
-    serializer_class = ErrandBoyDocumentSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['document_type']
-    search_fields = ['document_type']
-    
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'DELETE', 'PATCH']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
-    
-    def get_queryset(self):
-        user = self.request.user
-        logged_in_errand_boy = ErrandBoy.objects.only('id').get(user=user)
-        if self.request.user.is_staff:
-            return ErrandBoyDocument.objects.all()
-        return ErrandBoyDocument.objects.filter(gofer_id=logged_in_errand_boy)
     
     
 class MessagePosterViewSet(ModelViewSet):
@@ -97,8 +60,16 @@ class LocationViewSet(ModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['state', 'country']
-    search_fields = ['state', 'country']
+    filterset_fields = ['latitude', 'longitude']
+    search_fields = ['latitude', 'longitude']
+    
+    
+class AddressViewSet(ModelViewSet):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['city', 'state', 'country',]
+    search_fields = ['city', 'state', 'country',]
     
     
     
