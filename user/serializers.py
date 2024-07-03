@@ -104,8 +104,6 @@ class MediaSerializer(serializers.ModelSerializer):
         fields = "__all__"  
 
 class ProGoferSerializer(serializers.ModelSerializer):
-    """Pro-gofer model serializer"""
-    documents = ProGoferDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = ProGofer
         fields = "__all__"
@@ -113,7 +111,6 @@ class ProGoferSerializer(serializers.ModelSerializer):
 
         
 class VendorSerializer(serializers.ModelSerializer):
-    documents = VendorDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = Vendor
         fields = "__all__"
@@ -154,7 +151,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
 
 class ErrandBoySerializer(serializers.ModelSerializer):
-    documents = ErrandBoyDocumentSerializer(many=True, read_only=True)
     class Meta:
         model = ErrandBoy
         fields = "__all__"
