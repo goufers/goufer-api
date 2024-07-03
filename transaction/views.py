@@ -1,5 +1,5 @@
 # views.py
-
+from pprint import pprint
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import (
@@ -26,7 +26,7 @@ from user.models import CustomUser, Gofer
 from django.db.models import Count
 
 
-paystack_secret_key = 'sk_test_58d7c6da2b1b3fb1c246d71e090cc18d76221624'
+paystack_secret_key = 'sk_test_1a2483045f4961552f4f516ae5cfd2e0ef9c2fbf'
 
 
 class FundWalletView(APIView):
@@ -54,7 +54,7 @@ class FundWalletView(APIView):
                 authorization_url = response_data['data']['authorization_url']
                 reference = response_data['data']['reference']
                 result = self.verify_payment(request, reference) # Verify payment before updating wallet
-                return Response({'authorization_url': authorization_url, 'amount': data['amount']}, status=status.HTTP_201_CREATED)
+                return Response({'authorization_url': authorization_url, 'amount': data['amount']/100}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'error': 'Unable to initialize transaction.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'ERROR':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -68,7 +68,7 @@ class FundWalletView(APIView):
         }
         response = requests.get(url, headers=headers)
         response_data = response.json()
-        print(response_data)
+        pprint(response_data)
         if response_data['status']:
             amount = response_data['data']['amount'] / 100  # Convert from kobo to naira
             wallet = Wallet.objects.filter(custom_user=request.user).first()
@@ -149,7 +149,7 @@ class TransactionListView(APIView):
     """List all transactions for authenticated user."""
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        transactions = Transaction.objects.filter(wallet__user=request.user).order_by('-created_at')
+        transactions = Transaction.objects.filter(wallet__custom_user=request.user).order_by('-created_at')
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     

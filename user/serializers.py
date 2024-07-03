@@ -1,5 +1,8 @@
+from msilib.schema import Media
 import re
 from rest_framework import serializers
+
+from main.models import Reviews
 from .models import CustomUser, Gofer, Vendor, ErrandBoy, ProGofer
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -7,7 +10,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.conf import settings
-from main.serializers import GoferDocumentSerializer, ErrandBoyDocumentSerializer, VendorDocumentSerializer, ProGoferDocumentSerializer
+from main.serializers import (
+    GoferDocumentSerializer, ErrandBoyDocumentSerializer, MessagePosterSerializer, ReviewsSerializer, VendorDocumentSerializer, 
+    ProGoferDocumentSerializer, LocationSerializer, SubCategorySerializer
+)
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 
@@ -79,17 +85,23 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'gender', 'first_name', 'last_name', 'location'
-        ]
-        
-        
-
+        ]    
 
 class GoferSerializer(serializers.ModelSerializer):
     documents = GoferDocumentSerializer(many=True, read_only=True)
+    sub_category = SubCategorySerializer(read_only=True)
+    location = LocationSerializer(read_only=True)
+    custom_user = UpdateProfileSerializer(read_only=True)
+    gofer_reviews = ReviewsSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
         fields = "__all__"
-
+        
+class MediaSerializer(serializers.ModelSerializer):
+    gofer_media = GoferSerializer(read_only=True)
+    class Meta:
+        model = Media
+        fields = "__all__"  
 
 class ProGoferSerializer(serializers.ModelSerializer):
     """Pro-gofer model serializer"""
@@ -126,7 +138,7 @@ class PasswordResetSerializer(serializers.Serializer):
             "user": user,
             "reset_link": password_reset_url
         }
-        message = render_to_string("user/password_reset_email.html", context=context)
+        message = render_to_string("password_reset_email.html", context=context)
         
         email = EmailMultiAlternatives(
             subject=subject,
