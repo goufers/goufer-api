@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ErrandBoyDocument, GoferDocument, Location, Category, SubCategory, Reviews, VendorDocument
+from .models import Location, Category, SubCategory, Reviews, Document
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
 from django.urls import reverse
@@ -10,9 +10,9 @@ from django.urls import reverse
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ['latitude', 'longitude', 'address', 'state', 'country']
-    search_fields = ['address', 'state', 'country']
-    list_filter = ['state', 'country']
+    list_display = ['latitude', 'longitude']
+    search_fields = ['latitude', 'longitude']
+    list_filter = ['latitude', 'longitude']
     list_per_page = 10
      
      
@@ -29,27 +29,9 @@ class SubCategoryAdmin(admin.ModelAdmin):
 class SubCategoryInline(admin.StackedInline):
     model = SubCategory
 
-@admin.register(GoferDocument)
-class GoferDocumentAdmin(admin.ModelAdmin):
-    list_display = ['document_type', 'gofer', 'document_of_expertise', 'uploaded_at', 'is_verified']
-    search_fields = ['document_type__istartswith']
-    list_filter = ['document_type']
-    list_per_page = 10
-    
-    
-
-@admin.register(VendorDocument)
-class VendorDocumentAdmin(admin.ModelAdmin):
-    list_display = ['document_type', 'vendor', 'document_of_expertise', 'uploaded_at', 'is_verified']
-    search_fields = ['document_type__istartswith']
-    list_filter = ['document_type']
-    list_per_page = 10
-    
-    
-
-@admin.register(ErrandBoyDocument)
-class ErrandBoyDocumentAdmin(admin.ModelAdmin):
-    list_display = ['document_type', 'errand_boy', 'uploaded_at', 'is_verified']
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+    list_display = ['document_type', 'user', 'document_of_expertise', 'uploaded_at', 'is_verified']
     search_fields = ['document_type__istartswith']
     list_filter = ['document_type']
     list_per_page = 10
