@@ -1,20 +1,24 @@
+import re
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
-from goufer import settings
+from django.conf import settings
 from .models import CustomUser, Gofer
+from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
 from main.serializers import LocationSerializer
-from .serializers import CustomUserSerializer, UpdateProfileSerializer, GoferSerializer
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .serializers import RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer
 from . import utils
+from .filters import GoferFilterSet
 from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
 from django_filters.rest_framework import DjangoFilterBackend
@@ -30,16 +34,20 @@ def register_user(request):
     JWT token(access and refresh) upon successful registration
     
     '''
-    serializer = CustomUserSerializer(data=request.data)
+    serializer = RegisterCustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         wallet = Wallet.objects.create(custom_user=user)
         wallet.save()
+        message_poster = MessagePoster.objects.create(custom_user=user)
+        message_poster.save()
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'auth_status': str(user.is_authenticated)
+            'auth_status': str(user.is_authenticated),
+            'email': str(user.email),
+            'phone_number': str(user.phone_number)
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -79,24 +87,27 @@ def send_verification_email(request):
     user = request.user
     if user.email_verified:
         return Response({"detail": "Email already verified."}, status=status.HTTP_400_BAD_REQUEST)
-    # Generate verification token
-    token = default_token_generator.make_token(user)
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    verification_link = request.build_absolute_uri(
-        reverse(viewname='verify_email', kwargs={'uidb64': uid, 'token': token})
-    )
-    try:
-        # Send verification email
-        send_mail(
-            'Verify your email address',
-            f'Click the link to verify your email address: {verification_link}',
-            settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False,
+    if user.email == request.data['email']:
+        # Generate verification token
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        verification_link = request.build_absolute_uri(
+            reverse(viewname='verify_email', kwargs={'uidb64': uid, 'token': token})
         )
-        return Response({"detail": "Email successfully sent"}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Send verification email
+            send_mail(
+                'Verify your email address',
+                f'Click the link to verify your email address: {verification_link}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            return Response({"detail": "Email successfully sent"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'detail': 'Invalid email address'}, status=status.HTTP_400_BAD_REQUEST)
     
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
@@ -188,8 +199,16 @@ def UpdateProfile(request):
 class GoferViewset(ModelViewSet):
     queryset = Gofer.objects.all()
     serializer_class = GoferSerializer
-    filter_backends = [DjangoFilterBackend]
-    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GoferFilterSet
+    search_fields = ['$bio', 'mobility_means', 'expertise']
+    ordering_fields = ['mobility_means', 'charges', 'avg_rating']
+        
+    # def list(self, request):
+    #     gofers = Gofer.objects.filter(is_available=True)
+    #     serializer = GoferSerializer(gofers, many=True)
+    #     return Response(serializer.data)
+            
     
     def update(self, request, pk):
         gofer = Gofer.objects.get(id=pk)
@@ -198,3 +217,19 @@ class GoferViewset(ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+    
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def ToggleAvailability(request, gofer_id):
+    gofer = Gofer.objects.get(id=gofer_id)
+    gofer.is_available = gofer.toggle_availability()
+    gofer.save()
+    return Response(GoferSerializer(gofer).data, status=status.HTTP_200_OK)
+    
