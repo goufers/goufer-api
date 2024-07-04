@@ -1,15 +1,20 @@
-from django.urls import path
-from .views import ChatRoomListCreate, ChatRoomDetail, ChatMessageListCreate, ChatMessageDetail, gofers_list, create_chat_room, chat_room
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_nested.routers import NestedDefaultRouter
+from .views import ConversationViewSet, ChatMessageViewSet
+
+# Create the main router
+router = DefaultRouter()
+router.register(r'conversation', ConversationViewSet, basename='conversation')
+
+# Create a nested router
+conversation_router = NestedDefaultRouter(router, r'conversation', lookup='conversation')
+conversation_router.register(r'messages', ChatMessageViewSet, basename='conversation-messages')
 
 urlpatterns = [
-    # New API endpoints
-    path('conversation/', ChatRoomListCreate.as_view(), name='chat_room_list_create'),
-    path('conversation/<int:pk>/', ChatRoomDetail.as_view(), name='chat_room_detail'),
-    path('chat-messages/', ChatMessageListCreate.as_view(), name='chat_message_list_create'),
-    path('chat-messages/<int:pk>/', ChatMessageDetail.as_view(), name='chat_message_detail'),
+    path('', include(router.urls)),
+    path('', include(conversation_router.urls)),
     
-    # # Existing views converted to API
-    # path('create-chat-room/<int:gofer_id>/', create_chat_room, name='create_chat_room'),
-    # path('chat-room/<int:room_id>/', chat_room, name='chat_room'),
-    # path('gofers_list/', gofers_list, name='gofers_list'),
+    
+    
 ]

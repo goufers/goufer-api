@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
+import chat.routing
 
 
 admin.site.site_header = "Goufer Administration"
@@ -31,6 +32,7 @@ urlpatterns = [
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("api/v1/chat/", include("chat.urls")),
     path('api/v1/users/transaction/', include('transaction.urls')),
+    path('', include(chat.routing.websocket_urlpatterns)), 
 
 ]
 
