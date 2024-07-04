@@ -6,8 +6,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from django.conf import settings
-from .models import CustomUser, Gofer, MOBILILTY_CHOICES
-from main.models import SubCategory, Location
+from .models import CustomUser, Gofer
+from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -16,11 +16,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import CustomUserSerializer, UpdateProfileSerializer, GoferSerializer
+from .serializers import RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer
 from . import utils
+from .filters import GoferFilterSet
 from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet, ModelChoiceFilter, ChoiceFilter, NumberFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 
@@ -33,16 +34,20 @@ def register_user(request):
     JWT token(access and refresh) upon successful registration
     
     '''
-    serializer = CustomUserSerializer(data=request.data)
+    serializer = RegisterCustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         wallet = Wallet.objects.create(custom_user=user)
         wallet.save()
+        message_poster = MessagePoster.objects.create(custom_user=user)
+        message_poster.save()
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'auth_status': str(user.is_authenticated)
+            'auth_status': str(user.is_authenticated),
+            'email': str(user.email),
+            'phone_number': str(user.phone_number)
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -191,27 +196,20 @@ def UpdateProfile(request):
     
     return Response(updated_user.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class GoferFilterSet(FilterSet):
-    sub_category = ModelChoiceFilter(queryset=SubCategory.objects.all())
-    location = ModelChoiceFilter(queryset=Location.objects.all())
-    mobility_means = ChoiceFilter(choices=MOBILILTY_CHOICES)
-    high_charges = NumberFilter(field_name='charges', lookup_expr='gt')
-    low_charges = NumberFilter(field_name='charges', lookup_expr='lt')
-    class Meta:
-        model = Gofer
-        fields = {
-            'sub_category', 'location',
-            'expertise', 'mobility_means'
-        }
-
 class GoferViewset(ModelViewSet):
     queryset = Gofer.objects.all()
     serializer_class = GoferSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = GoferFilterSet
     search_fields = ['$bio', 'mobility_means', 'expertise']
-    ordering_fields = ['mobility_means', 'charges']
+    ordering_fields = ['mobility_means', 'charges', 'avg_rating']
         
+    # def list(self, request):
+    #     gofers = Gofer.objects.filter(is_available=True)
+    #     serializer = GoferSerializer(gofers, many=True)
+    #     return Response(serializer.data)
+            
+    
     def update(self, request, pk):
         gofer = Gofer.objects.get(id=pk)
         serializer = GoferSerializer(data=request.data, instance=gofer, partial=True)
@@ -221,9 +219,17 @@ class GoferViewset(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action in ['list', 'retrieve']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+    
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def ToggleAvailability(request, gofer_id):
+    gofer = Gofer.objects.get(id=gofer_id)
+    gofer.is_available = gofer.toggle_availability()
+    gofer.save()
+    return Response(GoferSerializer(gofer).data, status=status.HTTP_200_OK)
     

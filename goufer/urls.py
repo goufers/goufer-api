@@ -33,6 +33,8 @@ urlpatterns = [
     path("api/v1/chat/", include("chat.urls")),
     path('api/v1/users/transaction/', include('transaction.urls')),
     path('', include(chat.routing.websocket_urlpatterns)), 
+    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='refresh')
+    
 
 ]
 
