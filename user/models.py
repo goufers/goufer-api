@@ -86,8 +86,7 @@ class Gofer(models.Model):
         return f"Gofer {self.custom_user.first_name}"
 
     
-    def __str__(self) -> str:
-        return f"User {self.custom_username.first_name}"
+    
     
     
 class Vendor(models.Model):
