@@ -229,8 +229,9 @@ GET /api/v1/gofers?filter_options
 ### Filters
 You can use the following query parameters to filter gofers:
 
-- `sub_category`: Filter by sub-category name (partial match, case-insensitive).
-- `location`: Filter by location's state or country (partial match, case-insensitive).
+- `category`: Filter by category name (partial match, case-insensitive).
+- `state`: Filter by gofer's state (partial match, case-insensitive).
+- `country`: Filter by gofer's country (partial match, case-insensitive).
 - `expertise`: Filter by expertise (partial match, case-insensitive).
 - `charges_above`: Filter by charges greater than the specified value.
 - `charges_below`: Filter by charges less than the specified value.
@@ -242,90 +243,183 @@ You can sort the results using the `ordering` parameter. Use `ordering=field_nam
 
 ### Example Requests and Responses
 
-#### Filter by Sub-Category and Location
+#### Filter by Sub-Category and Country
 ##### Request
 ```
-GET /api/v1/users/gofers/?sub_category=eye&location=Ken
+GET /api/v1/users/gofers/?sub_category=Fashion and Beauty&country=Bahamas
 ```
 ##### Response
 ```json
 [
-    {
-        "id": 1,
-        "user": {
-            "id": 1,
-            "username": "john_doe",
-            "email": "john@example.com"
-        },
-        "sub_category": "eye",
-        "expertise": "Ophthalmology",
-        "mobility_means": "Car",
-        "charges": 200.0,
-        "location": {
-            "city": "Nairobi",
-            "state": "Nairobi",
-            "country": "Kenya"
-        },
-        "bio": "Experienced ophthalmologist with over 10 years in practice."
-    }
+{
+    "id": 12,
+    "sub_category": {
+      "id": 21,
+      "name": "Difficult",
+      "description": "Leader service without step manage boy. Perhaps too morning look word.\nBuy news expert free amount religious. Because guess board society end."
+    },
+    "custom_user": {
+      "email": "nsmith@example.net",
+      "phone_number": "001-310-664-8809x8617",
+      "first_name": "",
+      "last_name": "",
+      "gender": "O",
+      "location": 15,
+      "address": {
+        "id": 4,
+        "house_number": "416",
+        "street": "Brown Crossing",
+        "city": "West Angelafurt",
+        "state": "Arizona",
+        "country": "Bahamas"
+      },
+      "documents": [],
+      "phone_verified": true,
+      "email_verified": false
+    },
+    "gofer_reviews": [],
+    "expertise": "Armed forces technical officer",
+    "mobility_means": "Motorcycle",
+    "bio": "Mission few big with whose. Behind up contain lead plant rate.\nShoulder gas town reason. Beyond daughter administration fall sign.",
+    "charges": 510,
+    "is_available": false,
+    "avg_rating": 0.0
+  }
 ]
 ```
 
 #### Filter by Sub-Category
 ##### Request
 ```
-GET /api/v1/users/gofers/?sub_category=eyes
+GET /api/v1/users/gofers/?category=Entertainment
 ```
 ##### Response
 ```json
 [
-    {
-        "id": 1,
-        "user": {
-            "id": 1,
-            "username": "john_doe",
-            "email": "john@example.com"
-        },
-        "sub_category": "eye",
-        "expertise": "Ophthalmology",
-        "mobility_means": "Car",
-        "charges": 200.0,
-        "location": {
-            "city": "Nairobi",
-            "state": "Nairobi",
-            "country": "Kenya"
-        },
-        "bio": "Experienced ophthalmologist with over 10 years in practice."
-    }
+  {
+    "id": 15,
+    "sub_category": {
+      "id": 29,
+      "name": "Floor",
+      "description": "Phone remember second identify owner. Own research best major ago."
+    },
+    "custom_user": {
+      "email": "parkerchristopher@example.com",
+      "phone_number": "+1-445-816-8787",
+      "first_name": "",
+      "last_name": "",
+      "gender": "M",
+      "location": 2,
+      "address": {
+        "id": 14,
+        "house_number": "73059",
+        "street": "Gutierrez Mountain",
+        "city": "East Davidport",
+        "state": "Hawaii",
+        "country": "Afghanistan"
+      },
+      "documents": [],
+      "phone_verified": false,
+      "email_verified": false
+    },
+    "gofer_reviews": [],
+    "expertise": "Designer, jewellery",
+    "mobility_means": "Car",
+    "bio": "Modern growth concern. Make join window vote street. Tonight lead remain administration almost social. Sell year join reduce Mrs son answer in.",
+    "charges": 346,
+    "is_available": false,
+    "avg_rating": 0.0
+  }
 ]
 ```
 
-#### Filter by Location
+#### Filter by State
 ##### Request
 ```
-GET /api/v1/users/gofers/?location=Kenya
+GET /api/v1/users/gofers/?state=Arizona
 ```
 ##### Response
 ```json
 [
-    {
-        "id": 1,
-        "user": {
-            "id": 1,
-            "username": "john_doe",
-            "email": "john@example.com"
-        },
-        "sub_category": "eye",
-        "expertise": "Ophthalmology",
-        "mobility_means": "Car",
-        "charges": 200.0,
-        "location": {
-            "city": "Nairobi",
-            "state": "Nairobi",
-            "country": "Kenya"
-        },
-        "bio": "Experienced ophthalmologist with over 10 years in practice."
-    }
+  {
+    "id": 12,
+    "sub_category": {
+      "id": 21,
+      "name": "Difficult",
+      "description": "Leader service without step manage boy. Perhaps too morning look word.\nBuy news expert free amount religious. Because guess board society end."
+    },
+    "custom_user": {
+      "email": "nsmith@example.net",
+      "phone_number": "001-310-664-8809x8617",
+      "first_name": "",
+      "last_name": "",
+      "gender": "O",
+      "location": 15,
+      "address": {
+        "id": 4,
+        "house_number": "416",
+        "street": "Brown Crossing",
+        "city": "West Angelafurt",
+        "state": "Arizona",
+        "country": "Bahamas"
+      },
+      "documents": [],
+      "phone_verified": true,
+      "email_verified": false
+    },
+    "gofer_reviews": [],
+    "expertise": "Armed forces technical officer",
+    "mobility_means": "Motorcycle",
+    "bio": "Mission few big with whose. Behind up contain lead plant rate.\nShoulder gas town reason. Beyond daughter administration fall sign.",
+    "charges": 510,
+    "is_available": false,
+    "avg_rating": 0.0
+  }
+]
+```
+
+#### Filter by Country
+##### Request
+```
+GET /api/v1/users/gofers/?country=Nigeria
+```
+##### Response
+```json
+[
+  {
+    "id": 1,
+    "sub_category": {
+      "id": 4,
+      "name": "Bank",
+      "description": "Investment this idea might really. Talk word life necessary price. Second idea democratic site certain including. Single message full west democratic."
+    },
+    "custom_user": {
+      "email": "jamieyork@example.com",
+      "phone_number": "5856464523",
+      "first_name": "",
+      "last_name": "",
+      "gender": "O",
+      "location": 12,
+      "address": {
+        "id": 13,
+        "house_number": "369",
+        "street": "Hernandez Spurs",
+        "city": "Laurenshire",
+        "state": "Rhode Island",
+        "country": "Fiji"
+      },
+      "documents": [],
+      "phone_verified": true,
+      "email_verified": false
+    },
+    "gofer_reviews": [],
+    "expertise": "Fine artist",
+    "mobility_means": "Bicycle",
+    "bio": "Girl election soldier movement finish soldier industry.\nOld relate cause. In her miss employee reason.\nLearn science once almost society event outside customer. Account member fear tonight.",
+    "charges": 524,
+    "is_available": false,
+    "avg_rating": 0.0
+  }
 ]
 ```
 

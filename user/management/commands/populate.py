@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from django.core.management.base import BaseCommand
 from ...models import CustomUser, Gofer
-from main.models import Location, SubCategory, Category
+from main.models import Address, Location, SubCategory, Category
 
 class Command(BaseCommand):
     help = 'Populates the database with dummy data'
@@ -41,21 +41,32 @@ class Command(BaseCommand):
             location = Location.objects.create(
                 latitude=fake.latitude(),
                 longitude=fake.longitude(),
-                address=fake.address(),
+            )
+            locations.append(location)
+            
+        addresses = []
+        for _ in range(20): # Adjust the number of addresses
+            address = Address.objects.create(
+                house_number=fake.building_number(),
+                street=fake.street_name(),
+                city=fake.city(),
                 state=fake.state(),
                 country=fake.country()
             )
-            locations.append(location)
+            addresses.append(address)
+            
         
         # Creating CustomUsers and Gofers
         for _ in range(50):  # Change 50 to the number of users you want to create
             gender = random.choice(['M', 'F', 'O'])
             location = random.choice(locations)
+            address = random.choice(addresses)
             user = CustomUser.objects.create_user(
                 email=fake.email(),
                 phone_number=fake.phone_number(),
                 gender=gender,
                 location=location,
+                address=address,
                 phone_verified=fake.boolean(),
                 email_verified=fake.boolean()
             )

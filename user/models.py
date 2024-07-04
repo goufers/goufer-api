@@ -61,6 +61,7 @@ class CustomUser(AbstractUser):
     profile_picture = models.ImageField(upload_to='files/dp', null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
     location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
+    address = models.ForeignKey("main.Address", on_delete=models.CASCADE, blank=True, null=True)
     groups = models.ManyToManyField(Group, blank=True, related_name='user_groups')
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name='user_user_permissions')
     phone_verified = models.BooleanField(default=False)
@@ -82,7 +83,6 @@ class Gofer(models.Model):
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
     is_available  = models.BooleanField(default=False)
     avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     
