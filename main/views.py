@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer
-from user.models import ErrandBoy, Gofer, Vendor
 from .models import Address, Category, Document, Location, SubCategory, Reviews, MessagePoster
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
@@ -75,13 +74,13 @@ class AddressViewSet(ModelViewSet):
     
 class SubCategoryViewSet(ModelViewSet):
     serializer_class = SubCategorySerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['name', 'category_id',]
+    search_fields = ['name']
     def get_queryset(self):
         return SubCategory.objects.filter(category_id=self.kwargs['category_pk'])
     def get_serializer_context(self):
         return {'category_id': self.kwargs['category_pk']}
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['name', 'category_id',]
-    search_fields = ['name']
     
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
