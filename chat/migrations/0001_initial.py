@@ -16,11 +16,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('content', models.TextField()),
+                ('attachment', models.FileField(blank=True, null=True, upload_to='chat_attachments/')),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
-            name='ChatRoom',
+            name='Conversation',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('is_open', models.BooleanField(default=True)),
