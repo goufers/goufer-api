@@ -2,6 +2,8 @@ from django.db import models
 from .validate import validate_file_size
 from user.models import Gofer, CustomUser
 from django.core.validators import FileExtensionValidator
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
 
 
@@ -80,6 +82,11 @@ class Reviews(models.Model):
     comment = models.TextField(blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     date = models.DateTimeField(auto_now_add=True)
+    
+@receiver(post_save, sender=Reviews)
+@receiver(post_delete, sender=Reviews)
+def update_gofer_rating(sender, instance, **kwargs):
+    instance.gofer.update_rating()
     
     def __str__(self) -> str:
         return f"This is the review of {self.reviews.gofer}"
