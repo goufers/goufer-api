@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, ErrandBoyDocument, GoferDocument, SubCategory, Reviews, Location, VendorDocument, ProGoferDocument, MessagePoster 
+from .models import Address, Category, Document, SubCategory, Reviews, Location, MessagePoster 
 
 
 
@@ -11,20 +11,16 @@ class CategorySerializer(serializers.ModelSerializer):
         
         
         
-class GoferDocumentSerializer(serializers.ModelSerializer):
+class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GoferDocument
-        fields = "__all__"
+        model = Document
+        fields = ["id", "document_type", "document_number", "document_of_expertise", "uploaded_at", "uploaded_at", "is_verified"]
         
-class VendorDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = VendorDocument
-        fields = "__all__"
-class ErrandBoyDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ErrandBoyDocument
-        fields = "__all__"
+    def create(self, validated_data):
+        currently_logged_in_user_id = self.context["currently_logged_in_user_id"]
+        return Document.objects.create(user_id=currently_logged_in_user_id, **validated_data)
         
+
 
 class MessagePosterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,11 +28,6 @@ class MessagePosterSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
         
-
-class ProGoferDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProGoferDocument
-        fields = "__all__"
 
 class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,6 +47,12 @@ class ReviewsSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
+        fields = "__all__"
+        
+        
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
         fields = "__all__"
         
 

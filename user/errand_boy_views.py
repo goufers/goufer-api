@@ -10,7 +10,7 @@ from .models import ErrandBoy
 class ErrandBoyViewset(ModelViewSet):
     queryset = ErrandBoy.objects.all()
     serializer_class = ErrandBoySerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     
     def update(self, request, pk):
