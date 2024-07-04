@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import CustomUserSerializer, UpdateProfileSerializer, GoferSerializer
+from .serializers import RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_verification_required, phone_unverified
@@ -34,7 +34,7 @@ def register_user(request):
     JWT token(access and refresh) upon successful registration
     
     '''
-    serializer = CustomUserSerializer(data=request.data)
+    serializer = RegisterCustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         wallet = Wallet.objects.create(custom_user=user)

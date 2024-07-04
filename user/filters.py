@@ -6,9 +6,10 @@ from .models import Gofer
 
 
 class GoferFilterSet(FilterSet):
-    sub_category = CharFilter(method='filter_by_sub_category')
-    location = CharFilter(method='filter_by_location')
-    gender = CharFilter(method='filter_by_gender')
+    category = CharFilter(field_name='sub_category__category__category_name', method='filter_by_category')
+    state = CharFilter(field_name='custom_user__address__state', method='filter_by_state')
+    country = CharFilter(field_name='custom_user__address__country', method='filter_by_country')
+    gender = CharFilter(field_name='custom_user__gender', method='filter_by_gender')
     charges_above = NumberFilter(field_name='charges', lookup_expr='gt')
     charges_below = NumberFilter(field_name='charges', lookup_expr='lt')
     avg_rating = NumberFilter(field_name='avg_rating', lookup_expr='gte')
@@ -17,18 +18,21 @@ class GoferFilterSet(FilterSet):
     class Meta:
         model = Gofer
         fields = {
-            'sub_category', 'location',
             'expertise',
-            'avg_rating', 'is_available'
+            'avg_rating', 'is_available',
         }
         
-    def filter_by_location(self, queryset, name, value):
+    def filter_by_state(self, queryset, name, value):
         return queryset.filter(
-            Q(location__state__icontains=value)|
-            Q(location__country__icontains=value)
+            Q(custom_user__address__state__icontains=value)
         )
-    def filter_by_sub_category(self, queryset, name, value):
-        return queryset.filter(sub_category__name__icontains=value)
+    def filter_by_country(self, queryset, name, value):
+        return queryset.filter(
+            Q(custom_user__address__country__icontains=value)
+        )
+    
+    def filter_by_category(self, queryset, name, value):
+        return queryset.filter(sub_category__category__category_name__icontains=value)    
     
     def filter_by_gender(self, queryset, name, value):
         return queryset.filter(custom_user__gender=value)
@@ -36,12 +40,14 @@ class GoferFilterSet(FilterSet):
     def filter_queryset(self, queryset):
         filter_conditions = Q()
         
-        if 'sub_category' in self.form.cleaned_data and self.form.cleaned_data['sub_category']:
-            filter_conditions |= Q(sub_category__name__icontains=self.form.cleaned_data['sub_category'])
-
-        if 'location' in self.form.cleaned_data and self.form.cleaned_data['location']:
-            filter_conditions |= Q(location__state__icontains=self.form.cleaned_data['location']) | \
-                                 Q(location__country__icontains=self.form.cleaned_data['location'])
+        if 'category' in self.form.cleaned_data and self.form.cleaned_data['category']:
+            filter_conditions |= Q(sub_category__category__category_name__icontains=self.form.cleaned_data['category'])
+            
+        if 'state' in self.form.cleaned_data and self.form.cleaned_data['state']:
+            filter_conditions |= Q(custom_user__address__state__icontains=self.form.cleaned_data['state'])
+            
+        if 'country' in self.form.cleaned_data and self.form.cleaned_data['country']:
+            filter_conditions |= Q(custom_user__address__country__icontains=self.form.cleaned_data['country'])
 
         if 'expertise' in self.form.cleaned_data and self.form.cleaned_data['expertise']:
             filter_conditions |= Q(expertise__icontains=self.form.cleaned_data['expertise'])
