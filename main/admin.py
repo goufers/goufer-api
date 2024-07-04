@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Location, Category, SubCategory, Reviews, Document
+from .models import Location, Category, SubCategory, Reviews, Document, Address
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
 from django.urls import reverse
@@ -15,7 +15,9 @@ class LocationAdmin(admin.ModelAdmin):
     list_filter = ['latitude', 'longitude']
     list_per_page = 10
      
-     
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ['house_number', 'street', 'city', 'state', 'country']
      
 @admin.register(SubCategory)
 class SubCategoryAdmin(admin.ModelAdmin):

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = Client(os.getenv('account_sid'), os.getenv('auth_token'))
-verify = client.verify.services(os.getenv('service_sid'))
+verify = client.verify.v2.services(os.getenv('service_sid'))
 
 
 def send(phone):

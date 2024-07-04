@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Avg
 
 
 
@@ -14,6 +15,12 @@ MOBILILTY_CHOICES = [
     ('Van', 'Van'),
     ('Bus', 'Bus'),
     ('Other', 'Other')
+]
+
+GENDER_CHOICES = [
+    ('M', 'Male'),
+    ('F', 'Female'),
+    ('O', 'Others')
 ]
 
 class CustomUserManager(BaseUserManager):
@@ -48,18 +55,13 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     """Base user class for authentication"""
-    GENDER_CHOICES = [
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('O', 'Others')
-    ]
     username = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
     phone_number = models.CharField(max_length=30, unique=True, db_index=True)
-    gender = models.CharField(max_length=50, choices=GENDER_CHOICES, null=True)
     profile_picture = models.ImageField(upload_to='files/dp', null=True, blank=True)
-    location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
+    location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
+    address = models.ForeignKey("main.Address", on_delete=models.CASCADE, blank=True, null=True)
     groups = models.ManyToManyField(Group, blank=True, related_name='user_groups')
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name='user_user_permissions')
     phone_verified = models.BooleanField(default=False)
@@ -76,16 +78,32 @@ class CustomUser(AbstractUser):
 
 class Gofer(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='gofer')
-    expertise = models.CharField(max_length=200, default=None)
-    mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Motorcycle')
+    expertise = models.CharField(max_length=200, default=None, db_index=True)
+    mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Motorcycle', db_index=True)
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    
+    is_available  = models.BooleanField(default=False)
+    avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     
     def __str__(self) -> str:
-        return f"Gofer {self.custom_user.first_name}"
+        return f"Gofer {self.custom_user.email}"
+    
+    def update_rating(self):
+        reviews = self.gofer_reviews.all()
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+        self.avg_rating = average_rating or 0.00
+        self.save()
 
+    def toggle_availability(self):
+        return not self.is_available
+    
+class Media(models.Model):
+    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='gofer_media')
+    media = models.ImageField(upload_to='media/gofer/media')
+    
+    def __str__(self) -> str:
+        return self.gofer.custom_user.email
     
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
