@@ -105,6 +105,9 @@ class Media(models.Model):
     def __str__(self) -> str:
         return self.gofer.custom_user.email
     
+    
+    
+    
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
     business_name = models.CharField(max_length=255)
