@@ -2,7 +2,7 @@ from rest_framework_nested import routers
 from user.errand_boy_views import ErrandBoyViewset
 from user.vendor_views import VendorViewSet
 
-from user.views import GoferViewset
+from user.views import GoferViewset, MediaViewset
 from .views import CategoryViewSet, DocumentViewSet, LocationViewSet, AddressViewSet, MessagePosterViewSet, ReviewsViewSet, SubCategoryViewSet
 
 router = routers.DefaultRouter()
@@ -26,6 +26,6 @@ category_router.register('subcategory', SubCategoryViewSet, basename='category_s
 gofer_router = routers.NestedDefaultRouter(router, 'gofers', lookup='gofer')
 category_router.register('reviews', ReviewsViewSet, basename='gofer_reviews')
 
-
+gofer_router.register('media', MediaViewset, basename='gofer_media')
 
 urlpatterns = router.urls + category_router.urls + gofer_router.urls
