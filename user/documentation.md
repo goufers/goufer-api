@@ -11,6 +11,8 @@ This documentation covers the following API endpoints:
 6. Get all available Gofers
 7. Get single Gofer profile information
 8. Password Reset
+9. Toggle Availability for Gofers
+10. Logged in User Profile
 
 ## Endpoints
 
@@ -803,5 +805,110 @@ GET /api/v1/users/gofers/<gofer_id>
 #### Endpoint
 
 
+### 9. Toggle Availability
 
+This API endpoint allows a logged-in Gofer to toggle their availability status.
+
+#### Endpoint
+
+`POST /api/v1/toggle-available/`
+
+#### Authentication
+
+- **Required**: Yes
+- **Method**: Bearer Token
+
+#### Permissions
+
+- **Required**: IsAuthenticated
+
+#### Request Headers
+
+- **Authorization**: `Bearer <your_token_here>`
+
+#### Request Body
+
+- **Required**: None
+
+#### Response
+
+- **Success (200 OK)**:
+    - Returns the updated Gofer object with the new availability status.
+    - **Example**:
+    ```json
+    {
+        "id": 1,
+        "custom_user": 1,
+        "expertise": "Orthoptist",
+        "mobility_means": "Bicycle",
+        "bio": "Or sure five benefit success nice sure...",
+        "sub_category": {
+            "id": 5,
+            "name": "Military",
+            "description": "Trial state what major energy race improve..."
+        },
+        "location": {
+            "id": 1,
+            "latitude": 49.331095,
+            "longitude": 107.534661,
+            "address": "5645 Glenn Divide Apt. 738\nLake Michaelfort, ME 69113",
+            "state": "North Dakota",
+            "country": "Algeria"
+        },
+        "rating": null,
+        "charges": 250,
+        "is_available": true
+    }
+    ```
+- **Error (400 Bad Request)**:
+    - **Example**:
+    ```json
+    {
+        "error": "This user is not a Gofer"
+    }
+    ```
+
+#### Example Request
+
+```
+POST /api/v1/toggle-available/
+Authorization: Bearer <your_token_here>
+Content-Type: application/json
+```
+
+#### Example Response
+
+- **Success**:
+```json
+{
+  "id": 51,
+  "sub_category": {
+    "id": 12,
+    "name": "Consumer",
+    "description": "Just thing skill. Maintain thousand market.\nSafe project lay particularly end throw activity. Door stand reflect she."
+  },
+  "custom_user": {
+    "id": 52,
+    "email": "ezekielokebule11011@outlook.com",
+    "phone_number": "+2348125342305",
+    "first_name": "Jonathan",
+    "last_name": "Hughes",
+    "gender": "M",
+    "location": null,
+    "address": null,
+    "documents": [],
+    "date_joined": "2024-07-04T08:47:43.545528Z",
+    "phone_verified": false,
+    "email_verified": false
+  },
+  "gofer_reviews": [],
+  "gofer_media": [],
+  "expertise": "I sell and buy stolen bikes",
+  "mobility_means": "Bicycle",
+  "bio": "I love you\r\nI love you\r\nI love you\r\nI love you",
+  "charges": 900,
+  "is_available": false,
+  "avg_rating": 0.0
+}
+```
 ---

@@ -6,7 +6,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from django.conf import settings
-from .models import CustomUser, Gofer
+from .models import CustomUser, Gofer, Media
 from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -14,14 +14,16 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import RetrieveAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer
+from .serializers import MediaSerializer, RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer, CustomUserSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_verification_required, phone_unverified
 from transaction.models import Wallet
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -227,9 +229,32 @@ class GoferViewset(ModelViewSet):
     
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
-def ToggleAvailability(request, gofer_id):
-    gofer = Gofer.objects.get(id=gofer_id)
-    gofer.is_available = gofer.toggle_availability()
-    gofer.save()
-    return Response(GoferSerializer(gofer).data, status=status.HTTP_200_OK)
+def ToggleAvailability(request):
+    try:
+        gofer = Gofer.objects.get(id=request.user.gofer.id)
+        gofer.is_available = gofer.toggle_availability()
+        gofer.save()
+        return Response(GoferSerializer(gofer).data, status=status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        return Response({'error': 'This user is not a Gofer'})
     
+class CurrentUserView(RetrieveAPIView):
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+class MediaViewset(ModelViewSet):
+    serializer_class = MediaSerializer
+    queryset = Media.objects.all()
+    def get_queryset(self):
+        gofer_id = self.kwargs['gofer_pk']
+        return Media.objects.filter(gofer__id=gofer_id)
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
