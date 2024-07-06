@@ -1,6 +1,8 @@
+import logging
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from .models import Conversation, ChatMessage
@@ -11,8 +13,9 @@ from main.models import MessagePoster
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
+    permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['POST'])
+    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
     def create_chat_room(self, request):
         user = request.user
         gofer_id = request.data.get('gofer_id')
@@ -20,7 +23,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         progofer_id = request.data.get('progofer_id')
 
         # Ensure only one participant is specified
-        participant_count = sum(bool(gofer_id), bool(vendor_id), bool(progofer_id))
+        participant_count = sum([bool(gofer_id), bool(vendor_id), bool(progofer_id)])
         if participant_count != 1:
             return Response({'error': 'Exactly one participant (gofer, vendor, or progofer) must be specified'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -59,15 +62,17 @@ class ConversationViewSet(viewsets.ModelViewSet):
         else:
             return Response({'error': 'Invalid parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['GET'])
+    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
     def chat_room(self, request, pk=None):
         chat_room = self.get_object()
         serializer = self.get_serializer(chat_room)
         return Response(serializer.data)
 
+logger = logging.getLogger(__name__)
 class ChatMessageViewSet(viewsets.ModelViewSet):
     queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         room_id = self.kwargs['conversation_pk']
@@ -76,4 +81,5 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         room_id = self.kwargs['conversation_pk']
         conversation = get_object_or_404(Conversation, pk=room_id)
+        logger.info(f"Saving message for room {room_id} and conversation {conversation.id}")
         serializer.save(room=conversation)
