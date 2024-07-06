@@ -12,7 +12,7 @@ class CustomUserAdmin(admin.ModelAdmin):
     
 @admin.register(Gofer)
 class GoferAdmin(admin.ModelAdmin):
-    list_display = ['expertise', 'sub_category']
+    list_display = ['expertise', 'sub_category', 'custom_user']
     search_fields = ['custom_user', 'sub_category', 'mobility_means']
     list_filter = ["sub_category", "mobility_means"]
     

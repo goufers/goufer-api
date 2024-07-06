@@ -1,0 +1,79 @@
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
+from django.db.models import F, Q
+from .models import Conversation, ChatMessage
+from .serializers import ConversationSerializer, ChatMessageSerializer
+from user.models import Gofer, Vendor, ProGofer
+from main.models import MessagePoster
+
+class ConversationViewSet(viewsets.ModelViewSet):
+    queryset = Conversation.objects.all()
+    serializer_class = ConversationSerializer
+    # permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['GET'])
+    def gofers_list(self, request):
+        user = request.user
+        gofers = Gofer.objects.annotate(order=F('id'))
+        users = MessagePoster.objects.all()
+
+        try:
+            gofer = Gofer.objects.get(user=user.id)
+            chat_rooms = Conversation.objects.filter(Q(message_poster=user) | Q(gofer=gofer))
+        except Gofer.DoesNotExist:
+            chat_rooms = Conversation.objects.filter(message_poster=user)
+
+        return Response({
+            'gofers': gofers.values(),
+            'users': users.values(),
+            'chat_rooms': chat_rooms.values()
+        })
+
+    @action(detail=False, methods=['POST'])
+    def create_chat_room(self, request):
+        user = request.user
+        gofer_id = request.data.get('gofer_id')
+        vendor_id = request.data.get('vendor_id')
+        progofer_id = request.data.get('progofer_id')
+
+        if gofer_id:
+            gofer = get_object_or_404(Gofer, id=gofer_id)
+            existing_chat_rooms = Conversation.objects.filter(message_poster=user, gofer=gofer)
+        elif vendor_id:
+            vendor = get_object_or_404(Vendor, id=vendor_id)
+            gofer = user.gofer  # Assuming user has a one-to-one relation with Gofer
+            existing_chat_rooms = Conversation.objects.filter(gofer=gofer, vendor=vendor)
+        elif progofer_id:
+            progofer = get_object_or_404(ProGofer, id=progofer_id)
+            existing_chat_rooms = Conversation.objects.filter(message_poster=user, progofer=progofer)
+        else:
+            return Response({'error': 'Invalid parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if existing_chat_rooms.exists():
+            chat_room = existing_chat_rooms.first()
+            return Response({'message': 'Chat room already exists', 'room_id': chat_room.id}, status=status.HTTP_200_OK)
+
+        chat_room = Conversation.objects.create(message_poster=user, gofer=gofer, vendor=vendor, progofer=progofer)
+        return Response({'message': 'Chat room created', 'room_id': chat_room.id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['GET'])
+    def chat_room(self, request, pk=None):
+        chat_room = self.get_object()
+        serializer = self.get_serializer(chat_room)
+        return Response(serializer.data)
+
+class ChatMessageViewSet(viewsets.ModelViewSet):
+    queryset = ChatMessage.objects.all()
+    serializer_class = ChatMessageSerializer
+    # permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        room_id = self.kwargs['conversation_pk']
+        return ChatMessage.objects.filter(room_id=room_id)
+
+    def perform_create(self, serializer):
+        room_id = self.kwargs['conversation_pk']
+        conversation = get_object_or_404(Conversation, pk=room_id)
+        serializer.save(room=conversation)

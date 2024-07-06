@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('chat', '0001_initial'),
+        ('main', '0001_initial'),
         ('user', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -22,18 +23,18 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_messages', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='chatroom',
+            model_name='conversation',
             name='gofer',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='chats', to='user.gofer'),
         ),
         migrations.AddField(
-            model_name='chatroom',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_rooms', to=settings.AUTH_USER_MODEL),
+            model_name='conversation',
+            name='message_poster',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='chat_rooms', to='main.messageposter'),
         ),
         migrations.AddField(
             model_name='chatmessage',
             name='room',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='chat.chatroom'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='chat.conversation'),
         ),
     ]
