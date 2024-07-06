@@ -1,0 +1,40 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'transaction/styles.css' %}" />
+  </head>
+  <body>
+    <header class="home-header">
+      <nav class="home-nav">
+        <div>
+          <img src="{% static 'transaction/goufer.jpg' %}" alt="goufer-image" />
+        </div>
+        <ul class="home-ul">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <div>
+          <ul class="sign-up-div">
+            <li><a href="#sign-up">Sign Up</a></li>
+            <li><a href="#sign-in">Sign In</a></li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <main class="home-main">
+      <h1 class="main-header">Welcome To Goufer!</h1>
+      <h3>
+        A platform where you get <em>Experienced</em> professionals at your
+        fingertips.
+      </h3>
+    </main>
+  </body>
+</html>

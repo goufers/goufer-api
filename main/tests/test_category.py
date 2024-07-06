@@ -50,6 +50,10 @@ class TestGetCategroyList:
         
         assert response.status_code == status.HTTP_200_OK
         
+        
+class TestRetriveCategory:
+    pass
+        
      
         
 @pytest.mark.django_db
@@ -87,10 +91,12 @@ class TestUpdateCategory:
     def test_if_user_is_admin_and_sends_valid_data_returns_200(self, api_client):
         api_client.force_authenticate(user=User(is_staff=True))
         category = baker.make(Category)
-        print(category)
         
-        response = api_client.put(f'/api/v1/main/categories/{category.id}', {'category_name': 'entertainment', 'description': 'Entertainment Description', 'created_at': '2024-05-30T22:30:57.768126Z'})
+        response = api_client.put(f'/api/v1/main/categories/{category.id}/', {'category_name': 'entertainment', 'description': 'Entertainment Description', 'created_at': '2024-05-30T22:30:57.768126Z'})
         
         assert response.status_code == status.HTTP_200_OK
         
-        assert False 
+        
+
+    
+        
