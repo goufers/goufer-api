@@ -13,6 +13,8 @@ django-cors-headers = "*"
 django-filter = "*"
 requests = "*"
 bcrypt = "*"
+channels = "*"
+daphne = "*"
 twilio = "*"
 python-dotenv = "*"
 
