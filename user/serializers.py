@@ -87,7 +87,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True)
     class Meta:
         model = CustomUser
-        fields = ['email', 'phone_number', 'first_name', 'last_name', 'gender', 'location', 'address', 'documents', 'phone_verified', 'email_verified']
+        fields = ['id', 'email', 'phone_number', 'first_name', 'last_name', 'gender', 'location', 'address', 'documents', 'date_joined', 'phone_verified', 'email_verified']
         read_only_fields = ['phone_verified', 'email_verified']
 
 class UpdateProfileSerializer(serializers.ModelSerializer):

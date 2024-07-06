@@ -81,7 +81,6 @@ class Command(BaseCommand):
                 bio=fake.text(max_nb_chars=200),
                 sub_category=random.choice(subcategories),
                 charges=random.randint(10, 900),
-                location=location
             )
             gofer.save()
 

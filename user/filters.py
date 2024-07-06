@@ -52,11 +52,11 @@ class GoferFilterSet(FilterSet):
         if 'expertise' in self.form.cleaned_data and self.form.cleaned_data['expertise']:
             filter_conditions |= Q(expertise__icontains=self.form.cleaned_data['expertise'])
             
-        # if 'gender' in self.form.cleaned_data and self.form.cleaned_data['gender']:
-        #     filter_conditions |= Q(gender__icontains=self.form.cleaned_data['gender'])
+        if 'gender' in self.form.cleaned_data and self.form.cleaned_data['gender']:
+            filter_conditions &= Q(custom_user__gender__icontains=self.form.cleaned_data['gender'])
 
         if 'mobility_means' in self.form.cleaned_data and self.form.cleaned_data['mobility_means']:
-            filter_conditions |= Q(mobility_means=self.form.cleaned_data['mobility_means'])
+            filter_conditions &= Q(mobility_means=self.form.cleaned_data['mobility_means'])
 
         if 'charges_above' in self.form.cleaned_data and self.form.cleaned_data['charges_above']:
             filter_conditions |= Q(charges__gt=self.form.cleaned_data['charges_above'])
@@ -65,7 +65,7 @@ class GoferFilterSet(FilterSet):
             filter_conditions |= Q(charges__lt=self.form.cleaned_data['charges_below'])
             
         if 'is_available' in self.form.cleaned_data and self.form.cleaned_data['is_available']:
-            filter_conditions |= Q(is_available__exact=self.form.cleaned_data['is_available'])
+            filter_conditions &= Q(is_available__exact=self.form.cleaned_data['is_available'])
 
         # if 'min_rating' in self.form.cleaned_data and self.form.cleaned_data['min_rating']:
         #     filter_conditions |= Q(avg_rating__gte=self.form.cleaned_data['min_rating'])
