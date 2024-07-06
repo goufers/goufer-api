@@ -25,6 +25,7 @@ admin.site.site_header = "Goufer Administration"
 admin.site.index_title = "Admin"
 
 urlpatterns = [
+    path("", include("transaction.urls")),
     path('admin/', admin.site.urls),
     path('api/v1/users/', include('user.urls')),
     path('api/v1/main/', include('main.urls')),
