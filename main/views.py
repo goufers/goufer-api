@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 
 
 class CategoryViewSet(ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.prefetch_related('sub_categories').all()
     serializer_class = CategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['category_name']
@@ -36,7 +36,7 @@ class DocumentViewSet(ModelViewSet):
     def get_queryset(self):
         currently_logged_in_user = self.request.user
         if self.request.user.is_staff:
-            return Document.objects.all()
+            return Document.objects.select_related('user').all()
         return Document.objects.filter(user=currently_logged_in_user)
     
     def get_serializer_context(self):
@@ -45,7 +45,7 @@ class DocumentViewSet(ModelViewSet):
     
     
 class MessagePosterViewSet(ModelViewSet):
-    queryset = MessagePoster.objects.all()
+    queryset = MessagePoster.objects.select_related('user').all()
     serializer_class = MessagePosterSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
