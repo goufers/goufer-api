@@ -9,17 +9,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['goufer-test-6d47b2229297.herokuapp.com']
+# ALLOWED_HOSTS = []
 
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
     'default': dj_database_url.config()
 }
-
-
 
 
 EMAIL_HOST = os.environ['MAILGUN_SMTP_SERVER']
