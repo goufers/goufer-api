@@ -17,6 +17,7 @@ channels = "*"
 daphne = "*"
 twilio = "*"
 python-dotenv = "*"
+whitenoise = "*"
 
 [dev-packages]
 pytest = "*"
