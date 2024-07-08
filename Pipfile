@@ -21,6 +21,7 @@ whitenoise = "*"
 dj-database-url = "*"
 gunicorn = "*"
 django-heroku = "*"
+mysqlclient = "*"
 
 [dev-packages]
 pytest = "*"
