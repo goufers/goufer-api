@@ -1,5 +1,6 @@
 from .common import *
 import os
+import dj_database_url
 
 
 
@@ -8,19 +9,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['goufer-test-11a466ef5e78.herokuapp.com']
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+DATABASES = {
+    'default': dj_database_url.config()
+}
 
-DATABASES = {}
 
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_HOST = os.environ['MAILGUN_SMTP_SERVER']
+EMAIL_PORT = os.environ['MAILGUN_SMTP_PORT']
+EMAIL_HOST_USER = os.environ['MAILGUN_SMTP_LOGIN']
+EMAIL_HOST_PASSWORD = os.environ['MAILGUN_SMTP_PASSWORD']
