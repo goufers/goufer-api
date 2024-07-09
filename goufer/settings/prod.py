@@ -4,6 +4,7 @@ import dj_database_url
 
 
 
+
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -15,6 +16,8 @@ ALLOWED_HOSTS = ['goufer-test-11a466ef5e78.herokuapp.com']
 DATABASES = {
     'default': dj_database_url.config()
 }
+
+
 
 
 EMAIL_HOST = os.environ['MAILGUN_SMTP_SERVER']
