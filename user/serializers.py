@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers
 
-from main.models import Reviews
+from main.models import Address, Reviews
 from .models import CustomUser, Gofer, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -14,6 +14,7 @@ from main.serializers import (
 )
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 
 
 class RegisterCustomUserSerializer(serializers.ModelSerializer):
@@ -83,29 +84,64 @@ class MediaSerializer(serializers.ModelSerializer):
         fields = "__all__"
 class CustomUserSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
-    location = LocationSerializer()
-    documents = DocumentSerializer(many=True)
+    location = LocationSerializer(read_only=True)
+    documents = DocumentSerializer(many=True, read_only=True)
     class Meta:
         model = CustomUser
         fields = ['id', 'email', 'phone_number', 'first_name', 'last_name', 'gender', 'location', 'address', 'documents', 'date_joined', 'phone_verified', 'email_verified']
-        read_only_fields = ['phone_verified', 'email_verified']
+        read_only_fields = ['phone_verified', 'email_verified', 'email', 'phone_number', 'email', 'date_joined']  
 
-class UpdateProfileSerializer(serializers.ModelSerializer):
+class GoferCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser
-        fields = [
-            'gender', 'first_name', 'last_name', 'location'
-        ]     
+        model = Gofer
+        fields = ['expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'is_available']
+
+    def create(self, validated_data):
+        custom_user = self.context['request'].user
+        gofer = Gofer.objects.create(custom_user=custom_user, **validated_data)
+        return gofer
 
 class GoferSerializer(serializers.ModelSerializer):
-    sub_category = SubCategorySerializer(read_only=True)
-    custom_user = CustomUserSerializer(read_only=True)
+    custom_user = CustomUserSerializer()
     gofer_reviews = ReviewsSerializer(many=True, read_only=True)
     gofer_media = MediaSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
-        fields = "__all__" 
+        fields = ['custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'gofer_media', 'gofer_reviews']
+        
+    def update(self, instance, validated_data):
+        custom_user_data = validated_data.pop('custom_user')
+        custom_user = instance.custom_user
+        address = instance.custom_user.address
 
+        instance.expertise = validated_data.get('expertise', instance.expertise)
+        instance.mobility_means = validated_data.get('mobility_means', instance.mobility_means)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.sub_category = validated_data.get('sub_category', instance.sub_category)
+        instance.charges = validated_data.get('charges', instance.charges)
+        instance.save()
+
+        custom_user.email = custom_user_data.get('email', custom_user.email)
+        custom_user.phone_number = custom_user_data.get('phone_number', custom_user.phone_number)
+        custom_user.first_name = custom_user_data.get('first_name', custom_user.first_name)
+        custom_user.last_name = custom_user_data.get('last_name', custom_user.last_name)
+        custom_user.gender = custom_user_data.get('gender', custom_user.gender)
+        custom_user.location = custom_user_data.get('location', custom_user.location)
+        address_data = custom_user_data.get('address', custom_user.address)
+        print(address)
+        print(address_data)
+        print(custom_user.address)
+        address.house_number = address_data['house_number']
+        address.street = address_data['street']
+        address.city = address_data['city']
+        address.state = address_data['state']
+        address.country = address_data['country']
+        address.save()
+        custom_user.save()
+
+        return instance
+
+    
 class ProGoferSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
     class Meta:
