@@ -133,26 +133,7 @@ class Availability(models.Model):
 
     def __str__(self):
         return f'{self.gofer.user.username} - {self.start_time} - {self.end_time}'
-    
-class Errand(models.Model):
-    """Associates a gofer to a user task"""
-    ERRAND_STATUS = [
-    ("Completed", "Completed"),
-    ("Ongoing", "Ongoing"),
-    ("Terminated", "Terminated")
-    ]
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='errands_sent')
-    task_description = models.TextField()
-    sub_category = models.ForeignKey('main.SubCategory', on_delete=models.CASCADE)
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='errands')
-    estimated_duration = models.IntegerField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=ERRAND_STATUS, default="O")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f'{self.gofer.username}'
-    
+        
 
 class ErrandBoy(models.Model):
     """An errand messanger for user task"""
@@ -172,6 +153,31 @@ class ErrandBoy(models.Model):
     def __str__(self) -> str:
         return f"Errandboy {self.user.first_name}"
 
+class Errand(models.Model):
+    """Associates a gofer to a user task"""
+    ERRAND_STATUS = [
+    ("Completed", "Completed"),
+    ("Ongoing", "Ongoing"),
+    ("Terminated", "Terminated")
+    ]
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='errands_sent')
+    task_description = models.TextField()
+    sub_category = models.ForeignKey('main.SubCategory', on_delete=models.CASCADE)
+    estimated_duration = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=ERRAND_STATUS, default="O")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.gofer.username}'
+    
+class GoferErrand(Errand):
+    message_poster = models.ForeignKey("main.MessagePoster", on_delete=models.CASCADE, related_name='gofer_errands')
+    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='errands')
+
+class ErrandBoyErrand(Errand):
+    message_poster = models.ForeignKey("main.MessagePoster", on_delete=models.CASCADE, related_name='errand_boy_errands')
+    errand_boy = models.ForeignKey("main.ErrandBoy", on_delete=models.CASCADE, related_name='errands')
 
 
 
