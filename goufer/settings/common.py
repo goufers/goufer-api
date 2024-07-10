@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import django_heroku
+
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,9 +54,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -126,11 +129,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = 'media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+
+django_heroku.settings(locals())
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -178,4 +184,32 @@ CHANNEL_LAYERS = {
             "hosts": [("127.0.0.1", 6379)],
         },
     },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'goufer.log',
+            'level': 'INFO',
+            'formatter':'simple',
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '{asctime} ({levelname}) - {name} - {message}',
+            'style': '{'
+        },
+    }
 }
