@@ -14,7 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ["id", "document_type", "document_number", "document_of_expertise", "uploaded_at", "uploaded_at", "is_verified"]
+        fields = ["id", "document_type", "document_number", "document_of_expertise", "uploaded_at", "is_verified"]
         
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user_id"]
