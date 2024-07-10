@@ -220,41 +220,10 @@ class GoferViewset(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    # def get_permissions(self):
+    #     if self.action == 'list':
+    #         permission_classes = [AllowAny]
+    #     else:
+    #         permission_classes = [IsAuthenticated]
+    #     return [permission() for permission in permission_classes]
     
-@permission_classes([IsAuthenticated])
-@api_view(['POST'])
-def ToggleAvailability(request):
-    try:
-        gofer = Gofer.objects.get(id=request.user.gofer.id)
-        gofer.is_available = gofer.toggle_availability()
-        gofer.save()
-        return Response(GoferSerializer(gofer).data, status=status.HTTP_200_OK)
-    except ObjectDoesNotExist:
-        return Response({'error': 'This user is not a Gofer'})
-    
-class CurrentUserView(RetrieveAPIView):
-    serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user
-
-class MediaViewset(ModelViewSet):
-    serializer_class = MediaSerializer
-    queryset = Media.objects.all()
-    def get_queryset(self):
-        gofer_id = self.kwargs['gofer_pk']
-        return Media.objects.filter(gofer__id=gofer_id)
-    
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]

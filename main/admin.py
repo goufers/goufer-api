@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Location, Category, SubCategory, Reviews, Document, Address
+from user.models import Errand, Gofer
+from .models import ErrandBoyDocument, GoferDocument, Location, Category, SubCategory, Reviews, VendorDocument, Address
 from django.utils.html import format_html, urlencode
 from django.db.models import Count
 from django.urls import reverse
@@ -10,9 +11,8 @@ from django.urls import reverse
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ['latitude', 'longitude']
-    search_fields = ['latitude', 'longitude']
-    list_filter = ['latitude', 'longitude']
+    list_display = ['latitude', 'longitude',]
+    search_fields = ['address', 'state', 'country']
     list_per_page = 10
      
 @admin.register(Address)
@@ -68,3 +68,26 @@ class ReviewsAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_select_related = ['message_poster', 'gofer']
     
+@admin.register(Gofer)
+class GoferAdmin(admin.ModelAdmin):
+    list_display = ['expertise', 'sub_category']
+    search_fields = ['custom_user', 'expertise', 'sub_category', 'charges']
+    list_filter = ['custom_user', 'expertise']
+    list_per_page = 20
+
+
+
+@admin.register(Errand) 
+class ErrandAdmin(admin.ModelAdmin):
+    list_display = ['user', 'task_description', 'sub_category', 'gofer', 'estimated_duration', 'status', 'errand_accepted']
+    search_fields = ['user', 'gofer', 'sub_category']
+    list_filter = ['user', 'gofer', 'sub_category']
+    list_per_page = 10
+    list_select_related =['user', 'gofer']
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ['house_number', 'street', 'city', 'state', 'country']
+    search_fields = ['state', 'country']
+    list_filter = ['state', 'country']
+    # list_select_related = ['state', 'country']

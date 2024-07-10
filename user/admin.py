@@ -36,6 +36,6 @@ class MessagePosterAdmin(admin.ModelAdmin):
     search_fields = ['custom_user']
     list_filter = ["custom_user"]
 
-@admin.register(Media)
-class Media(admin.ModelAdmin):
-    list_display = ['gofer', 'media']
+admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(Vendor, VendorAdmin)
+admin.site.register(ErrandBoy, ErrandBoyAdmin)

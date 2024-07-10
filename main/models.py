@@ -10,16 +10,21 @@ from django.dispatch import receiver
 class Location(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    
+   
     def __str__(self) -> str:
-        return f"Gofer at {self.latitude}, {self.longitude}"
-    
+        return f"{self.latitude}, {self.longitude}"
+
 class Address(models.Model):
-    house_number = models.CharField(max_length=10)
+    house_number = models.CharField(blank=False, max_length=5)
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
-    state = models.CharField(max_length=50)
-    country = models.CharField(max_length=50)
+    state = models.CharField(max_length=255)
+    country = models.CharField(max_length=100)
+
+    def __str__(self) -> str:
+        return f"{self.state}, {self.country}"
+
+
 
 class Category(models.Model):
     CATEGORY_CHOICES = (
