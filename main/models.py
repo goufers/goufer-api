@@ -15,11 +15,11 @@ class Location(models.Model):
         return f"Gofer at {self.latitude}, {self.longitude}"
     
 class Address(models.Model):
-    house_number = models.CharField(max_length=10)
-    street = models.CharField(max_length=255)
-    city = models.CharField(max_length=255)
-    state = models.CharField(max_length=50)
-    country = models.CharField(max_length=50)
+    house_number = models.CharField(max_length=10, default="House number")
+    street = models.CharField(max_length=255, default="Street name")
+    city = models.CharField(max_length=255, default="City")
+    state = models.CharField(max_length=50, default="State")
+    country = models.CharField(max_length=50, default="Country")
 
 class Category(models.Model):
     CATEGORY_CHOICES = (
