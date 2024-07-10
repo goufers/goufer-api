@@ -4,6 +4,9 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Avg
 
+from django.apps import apps
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 
@@ -74,6 +77,19 @@ class CustomUser(AbstractUser):
     
     def __str__(self) -> str:
         return self.email
+    
+    def save(self, *args, **kwargs):
+        if not self.address:
+            Address = apps.get_model('main', 'Address')
+            self.address = Address.objects.create()  # Create a default Address
+        super().save(*args, **kwargs)
+        
+@receiver(post_save, sender=CustomUser)
+def create_default_address(sender, instance, created, **kwargs):
+    if created and not instance.address:
+        Address = apps.get_model('main', 'Address')
+        instance.address = Address.objects.create()
+        instance.save()
 
 
 class Gofer(models.Model):

@@ -17,7 +17,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import MediaSerializer, RegisterCustomUserSerializer, UpdateProfileSerializer, GoferSerializer, CustomUserSerializer
+from .serializers import GoferCreateSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_verification_required, phone_unverified
@@ -36,6 +36,8 @@ def register_user(request):
     JWT token(access and refresh) upon successful registration
     
     '''
+    if request.user.is_authenticated:
+        return Response({'detail': 'User already authenticated.'}, status=status.HTTP_403_FORBIDDEN)
     serializer = RegisterCustomUserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
@@ -171,33 +173,7 @@ def logout_user(request):
         return Response({'detail': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-@phone_verification_required
-def UpdateProfile(request):
-    user = CustomUser.objects.get(id=request.user.id)
     
-    # Extract the location data from the request
-    location_data = request.data.pop('location', None)
-
-    # Update the user's profile information
-    updated_user = UpdateProfileSerializer(instance=user, data=request.data, partial=True)
-
-    if updated_user.is_valid():
-        user = updated_user.save()
-        
-        if location_data:
-            location_serializer = LocationSerializer(instance=user.location, data=location_data, partial=True)
-            if location_serializer.is_valid():
-                location_serializer.save()
-            else:
-                return Response(location_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response(updated_user.data, status=status.HTTP_200_OK)
-    
-    return Response(updated_user.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class GoferViewset(ModelViewSet):
     queryset = Gofer.objects.all()
     serializer_class = GoferSerializer
@@ -205,27 +181,26 @@ class GoferViewset(ModelViewSet):
     filterset_class = GoferFilterSet
     search_fields = ['$bio', 'mobility_means', 'expertise']
     ordering_fields = ['mobility_means', 'charges', 'avg_rating']
-        
-    # def list(self, request):
-    #     gofers = Gofer.objects.filter(is_available=True)
-    #     serializer = GoferSerializer(gofers, many=True)
-    #     return Response(serializer.data)
-            
     
-    def update(self, request, pk):
-        gofer = Gofer.objects.get(id=pk)
-        serializer = GoferSerializer(data=request.data, instance=gofer, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return GoferCreateSerializer
+        return GoferSerializer
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+    def partial_update(self, request, pk):
+        gofer = Gofer.objects.get(id=pk)
+        serializer = GoferSerializer(data=request.data, instance=gofer, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
