@@ -3,8 +3,7 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
 
-ARG PYTHON_VERSION=3.12.4
-FROM python:${PYTHON_VERSION}-alpine3.20
+FROM python:3.12.4
 
 
 # Prevents Python from writing pyc files.
@@ -34,12 +33,8 @@ WORKDIR /app
 
 
 # Required to install mysqlclient with Pip
-# RUN apt-get update \
-#   && apt-get install python3-dev default-libmysqlclient-dev gcc -y
-
-RUN apk update \
-  && apk add python3-dev mysql-client-dev gcc -y
-
+RUN apt-get update \
+  && apt-get install python3-dev default-libmysqlclient-dev gcc -y
 
 # Install pipenv
 RUN pip install --upgrade pip 
