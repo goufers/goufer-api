@@ -78,6 +78,15 @@ class RegisterCustomUserSerializer(serializers.ModelSerializer):
         )
         return user
     
+class LoginUserSerializer(serializers.ModelSerializer):
+    '''
+    Serializer for user login
+    '''
+    identifier = serializers.CharField(max_length=100)
+    class Meta:
+        model = CustomUser
+        fields = ['identifier', 'password']
+    
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media

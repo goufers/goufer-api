@@ -17,7 +17,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import GoferCreateSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
+from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
@@ -127,25 +127,29 @@ def verify_email(request, uidb64, token):
     else:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
     
-@api_view(['POST'])
-def login_user(request):
+class LoginUserView(ModelViewSet):
     '''
     Login a user
     
     Accepts a JSON payload with the email/phone number and 
     returns a pair of JWT tokens(access and refresh) upon successful authentication
     '''
-    identifier = request.data.get('identifier')
-    password = request.data.get('password')
-    user = CustomUser.objects.filter(Q(email=identifier) | Q(phone_number=identifier)).first()
-    if user and user.check_password(password):
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'auth_status': str(user.is_authenticated)
-        }, status=status.HTTP_200_OK)
-    return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    queryset = CustomUser.objects.all()
+    serializer_class = LoginUserSerializer
+    http_method_names = ['post']
+    
+    def create(self, request):
+        identifier = request.data.get('identifier')
+        password = request.data.get('password')
+        user = CustomUser.objects.filter(Q(email=identifier) | Q(phone_number=identifier)).first()
+        if user and user.check_password(password):
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'auth_status': str(user.is_authenticated)
+            }, status=status.HTTP_200_OK)
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
