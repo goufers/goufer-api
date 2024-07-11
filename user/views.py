@@ -20,15 +20,14 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .serializers import GoferCreateSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
 from . import utils
 from .filters import GoferFilterSet
-from .decorators import phone_verification_required, phone_unverified
+from .decorators import phone_unverified
 from transaction.models import Wallet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.views import APIView
 
 
-
-@api_view(['POST'])
-def register_user(request):
+class RegisterUserView(ModelViewSet):
     ''' 
     Register new CustomUser
     
@@ -36,35 +35,34 @@ def register_user(request):
     JWT token(access and refresh) upon successful registration
     
     '''
-    if request.user.is_authenticated:
-        return Response({'detail': 'User already authenticated.'}, status=status.HTTP_403_FORBIDDEN)
-    serializer = RegisterCustomUserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        wallet = Wallet.objects.create(custom_user=user)
-        wallet.save()
-        message_poster = MessagePoster.objects.create(custom_user=user)
-        message_poster.save()
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'auth_status': str(user.is_authenticated),
-            'email': str(user.email),
-            'phone_number': str(user.phone_number)
-        }, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@phone_unverified
-def send_code(request):
-    phone_number = request.data.get('phone_number')
-    try:
-        utils.send(phone_number)
-    except Exception as e:
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    return Response({'detail': 'Verification code sent successfully.'}, status=status.HTTP_200_OK)
+    serializer_class = RegisterCustomUserSerializer
+    queryset = CustomUser.objects.all()
+    http_method_names = ['post']
+    def create(self, request):
+        if request.user.is_authenticated:
+            return Response({'detail': 'User already authenticated.'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = RegisterCustomUserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            phone_number = user.phone_number
+            return_message = dict()
+            try:
+                wallet = Wallet.objects.create(custom_user=user)
+                wallet.save()
+                message_poster = MessagePoster.objects.create(custom_user=user)
+                message_poster.save()
+                refresh = RefreshToken.for_user(user)
+                return_message['refresh'] = str(refresh)
+                return_message['access'] = str(refresh.access_token)
+                return_message['auth_status'] = str(user.is_authenticated)
+                return_message['email'] = str(user.email)
+                return_message['phone_number'] = str(user.phone_number)
+                utils.send(phone_number)
+                return Response(return_message, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return_message['detail'] = str(e)
+                return Response(return_message, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @phone_unverified
