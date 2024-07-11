@@ -4,7 +4,7 @@ from rest_framework import routers
 
 urlpatterns = [
     #path('register/', views.RegisterUserView.as_view(), name='register-user'),
-    path('login/', views.login_user, name='login-user'),
+    #path('login/', views.login_user, name='login-user'),
     path('logout/', views.logout_user, name='logout-user'),
     path('verify-phone/', views.verify_phone, name='verify_phone'),
     path('send-verification-email/', views.send_verification_email, name='send_verification_email'),
@@ -16,6 +16,7 @@ urlpatterns = [
 ]
 
 router = routers.DefaultRouter()
-router.register('register', views.RegisterUserView)
+router.register('register', views.RegisterUserView, basename='register')
+router.register('login', views.LoginUserView, basename='login')
 
 urlpatterns = urlpatterns + router.urls
