@@ -32,11 +32,10 @@ class Conversation(models.Model):
 class ChatMessage(models.Model):
     room = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(CustomUser, related_name='sent_messages', on_delete=models.CASCADE)
-    room = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(CustomUser, related_name='sent_messages', on_delete=models.CASCADE)
+    
     content = models.TextField()
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
-    attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
+    
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
     def __str__(self) -> str:
