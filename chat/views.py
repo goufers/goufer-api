@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from .models import Conversation, ChatMessage
 from .serializers import ConversationSerializer, ChatMessageSerializer
-from user.models import Gofer, Vendor, ProGofer
+from user.models import Gofer, Vendor, ProGofer, ErrandBoy
 from main.models import MessagePoster
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -21,11 +21,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         gofer_id = request.data.get('gofer_id')
         vendor_id = request.data.get('vendor_id')
         progofer_id = request.data.get('progofer_id')
+        errand_boy_id = request.data.get('errand_boy_id')
 
-        # Ensure only one participant is specified
-        participant_count = sum([bool(gofer_id), bool(vendor_id), bool(progofer_id)])
+        '''Ensure only one participant is specified'''
+        participant_count = sum([bool(gofer_id), bool(vendor_id), bool(progofer_id), bool(errand_boy_id)])
         if participant_count != 1:
-            return Response({'error': 'Exactly one participant (gofer, vendor, or progofer) must be specified'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Exactly one participant (gofer, vendor,errandboy or progofer) must be specified'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validate and create conversation based on the participant type
         if gofer_id:
@@ -57,6 +58,16 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 return Response({'message': 'Chat room already exists', 'room_id': existing_conversation.id}, status=status.HTTP_200_OK)
             # Create new conversation
             conversation = Conversation.objects.create(message_poster=user, progofer=progofer)
+            return Response({'message': 'Chat room created', 'room_id': conversation.id}, status=status.HTTP_201_CREATED)
+        
+        elif errand_boy_id:
+            errand_boy = get_object_or_404(ProGofer, id=errand_boy_id)
+            # Check if there's an existing conversation between the user and the errand boy
+            existing_conversation = Conversation.objects.filter(Q(message_poster=user, errand_boy=errand_boy) | Q(message_poster=errand_boy, errand_boy=user)).first()
+            if existing_conversation:
+                return Response({'message': 'Chat room already exists', 'room_id': existing_conversation.id}, status=status.HTTP_200_OK)
+            # Create new conversation
+            conversation = Conversation.objects.create(message_poster=user, errand_boy=errand_boy)
             return Response({'message': 'Chat room created', 'room_id': conversation.id}, status=status.HTTP_201_CREATED)
 
         else:
