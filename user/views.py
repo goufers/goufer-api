@@ -60,7 +60,7 @@ class RegisterUserView(ModelViewSet):
                 utils.send(phone_number)
                 return Response(return_message, status=status.HTTP_201_CREATED)
             except Exception as e:
-                return_message['detail'] = str(e)
+                return_message['verification_code'] = str(e.__str__)
                 return Response(return_message, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
