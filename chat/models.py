@@ -32,5 +32,6 @@ class ChatMessage(models.Model):
     content = models.TextField()
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    edited = models.BooleanField(default=False)
     def __str__(self) -> str:
         return f"Sent Message from {self.sender.username} at room_id {self.room.id}"
