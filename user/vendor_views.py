@@ -1,4 +1,4 @@
-from .serializers import VendorSerializer
+from .serializers import VendorCreateSerializer, VendorSerializer
 from rest_framework import viewsets
 from .models import Vendor
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -20,3 +20,8 @@ class VendorViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return VendorCreateSerializer
+        return VendorSerializer

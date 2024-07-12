@@ -90,7 +90,12 @@ class LoginUserSerializer(serializers.ModelSerializer):
 class MediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
-        fields = "__all__"
+        fields = ['vendor', 'media']
+        read_only_fields = ['vendor']
+    def create(self, validated_data):
+        vendor = self.context['request'].user.vendor
+        return Media.objects.create(vendor=vendor, media=validated_data['media'])
+        
 class CustomUserSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
     location = LocationSerializer(read_only=True)
@@ -113,10 +118,9 @@ class GoferCreateSerializer(serializers.ModelSerializer):
 class GoferSerializer(serializers.ModelSerializer):
     custom_user = CustomUserSerializer()
     gofer_reviews = ReviewsSerializer(many=True, read_only=True)
-    gofer_media = MediaSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
-        fields = ['custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'gofer_media', 'gofer_reviews']
+        fields = ['custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'gofer_reviews']
         
     def update(self, instance, validated_data):
         custom_user_data = validated_data.pop('custom_user')
@@ -157,9 +161,20 @@ class ProGoferSerializer(serializers.ModelSerializer):
         model = ProGofer
         fields = "__all__"
 
-
+class VendorCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendor
+        fields = [
+            'business_name', 'website', 'bio', 'facebook', 'twitter',
+            'instagram', 'linkedin', 'category'
+        ]
+    def create(self, validated_data):
+        custom_user = self.context['request'].user
+        vendor = Vendor.objects.create(custom_user=custom_user, **validated_data)
+        return vendor
         
 class VendorSerializer(serializers.ModelSerializer):
+    vendor_media = MediaSerializer(many=True, read_only=True)
     class Meta:
         model = Vendor
         fields = "__all__"
