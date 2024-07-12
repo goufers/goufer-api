@@ -3,7 +3,7 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
 
-FROM python:3.12.4
+FROM python:3.12.4-alpine3.20
 
 
 # Prevents Python from writing pyc files.
