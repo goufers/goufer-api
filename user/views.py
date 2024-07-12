@@ -57,11 +57,10 @@ class RegisterUserView(ModelViewSet):
                 return_message['auth_status'] = str(user.is_authenticated)
                 return_message['email'] = str(user.email)
                 return_message['phone_number'] = str(user.phone_number)
-                utils.send(phone_number)
+                #utils.send(phone_number)
                 return Response(return_message, status=status.HTTP_201_CREATED)
             except Exception as e:
-                return_message['verification_code'] = str(e.__str__)
-                return Response(return_message, status=status.HTTP_400_BAD_REQUEST)
+                return_message['error'] = str(e.__str__)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
