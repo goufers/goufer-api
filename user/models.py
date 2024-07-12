@@ -78,11 +78,11 @@ class CustomUser(AbstractUser):
     def __str__(self) -> str:
         return self.email
     
-    def save(self, *args, **kwargs):
-        if not self.address:
-            Address = apps.get_model('main', 'Address')
-            self.address = Address.objects.create()  # Create a default Address
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.address:
+    #         Address = apps.get_model('main', 'Address')
+    #         self.address = Address.objects.create()  # Create a default Address
+    #     super().save(*args, **kwargs)
         
 @receiver(post_save, sender=CustomUser)
 def create_default_address(sender, instance, created, **kwargs):
