@@ -91,6 +91,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'goufer.wsgi.application'
 
 
+# Daphne
+ASGI_APPLICATION = "goufer.asgi.application"
+
+
 
 
 
@@ -172,10 +176,6 @@ SIMPLE_JWT = {
 }
 
 
-
-
-# Daphne
-ASGI_APPLICATION = "goufer.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {

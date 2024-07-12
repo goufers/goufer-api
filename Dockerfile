@@ -23,18 +23,17 @@ ENV PYTHONUNBUFFERED=1
 # This is done to avoid running the app as root
 # If the app is run as root, any vulnerability in the app can be exploited to gain access to the host system
 # It's a good practice to run the app as a non-root user
-RUN addgroup app && adduser -S -G app app
 
-# Switch to the non-privileged user to run the application.
-USER app
 
 # set the working directory to /app
 WORKDIR /app
 
 
 # Required to install mysqlclient with Pip
-RUN apt-get update \
-  && apt-get install python3-dev default-libmysqlclient-dev gcc -y
+RUN apk update \
+  && apk add python3-dev py3-mysqlclient gcc 
+
+
 
 # Install pipenv
 RUN pip install --upgrade pip 
