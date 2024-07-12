@@ -114,16 +114,6 @@ class Gofer(models.Model):
     def toggle_availability(self):
         return not self.is_available
     
-class Media(models.Model):
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='gofer_media')
-    media = models.ImageField(upload_to='media/gofer/media')
-    
-    def __str__(self) -> str:
-        return self.gofer.custom_user.email
-    
-    
-    
-    
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
     business_name = models.CharField(max_length=255)
@@ -138,6 +128,14 @@ class Vendor(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     def __str__(self):
         return self.business_name
+
+class Media(models.Model):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='vendor_media')
+    media = models.ImageField(upload_to='media/vendors/media')
+    
+    def __str__(self) -> str:
+        return self.gofer.custom_user.email
+    
     
 class Availability(models.Model):
     """ Defines times of gofer or entertainer availability """
