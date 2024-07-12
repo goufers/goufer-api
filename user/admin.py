@@ -38,4 +38,4 @@ class MessagePosterAdmin(admin.ModelAdmin):
 
 @admin.register(Media)
 class Media(admin.ModelAdmin):
-    list_display = ['gofer', 'media']
+    list_display = ['vendor', 'media']

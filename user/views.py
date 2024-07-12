@@ -225,8 +225,8 @@ class MediaViewset(ModelViewSet):
     serializer_class = MediaSerializer
     queryset = Media.objects.all()
     def get_queryset(self):
-        gofer_id = self.kwargs['gofer_pk']
-        return Media.objects.filter(gofer__id=gofer_id)
+        vendor_id = self.kwargs['vendor_pk']
+        return Media.objects.filter(vendor__id=vendor_id)
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
