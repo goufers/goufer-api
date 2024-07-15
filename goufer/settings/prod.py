@@ -10,7 +10,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['goufer-test-11a466ef5e78.herokuapp.com']
+ALLOWED_HOSTS = ['goufer-test-4cd161188b65.herokuapp.com']
 
 
 DATABASES = {
