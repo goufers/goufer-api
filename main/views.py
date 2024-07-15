@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer
+from user.models import ProGofer
+from user.serializers import ProGoferSerializer
 from .models import Address, Category, Document, Location, SubCategory, Reviews, MessagePoster
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
@@ -102,6 +104,20 @@ class ReviewsViewSet(ModelViewSet):
         if self.request.method in ['PUT', 'DELETE', 'PATCH']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
+    
+    
+class ProGoferViewSet(ModelViewSet):
+    queryset = ProGofer.objects.all()
+    serializer_class = ProGoferSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['profession', 'hourly_rate', 'custom_user']
+    search_fields = ['profession', 'hourly_rate', 'custom_user']
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_context(self):
+        currently_logged_in_user_id = self.request.user.id
+        return {'currently_logged_in_user_id': currently_logged_in_user_id}
+    
     
     
 

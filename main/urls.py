@@ -3,7 +3,7 @@ from user.errand_boy_views import ErrandBoyViewset
 from user.vendor_views import VendorViewSet
 
 from user.views import GoferViewset, MediaViewset
-from .views import CategoryViewSet, DocumentViewSet, LocationViewSet, AddressViewSet, MessagePosterViewSet, ReviewsViewSet, SubCategoryViewSet
+from .views import CategoryViewSet, DocumentViewSet, LocationViewSet, AddressViewSet, MessagePosterViewSet, ProGoferViewSet, ReviewsViewSet, SubCategoryViewSet
 
 router = routers.DefaultRouter()
 
@@ -16,6 +16,7 @@ router.register('errand-boys', ErrandBoyViewset, basename='errand-boy')
 router.register('documents', DocumentViewSet, basename='document')
 router.register('message-posters', MessagePosterViewSet, basename='message-poster')
 router.register('addresses', AddressViewSet, basename='address')
+router.register('progofers', ProGoferViewSet, basename='progofer')
 
 
 

@@ -156,10 +156,14 @@ class GoferSerializer(serializers.ModelSerializer):
 
     
 class ProGoferSerializer(serializers.ModelSerializer):
-    documents = DocumentSerializer(many=True, read_only=True)
+    custom_user = CustomUserSerializer(read_only=True)
     class Meta:
         model = ProGofer
-        fields = "__all__"
+        fields = ['id', 'custom_user', 'bio', 'profession', 'hourly_rate']
+    
+    def create(self, validated_data):
+        user_id = self.context['currently_logged_in_user_id']
+        return ProGofer.objects.create(custom_user_id=user_id, **validated_data)
 
 class VendorCreateSerializer(serializers.ModelSerializer):
     class Meta:
