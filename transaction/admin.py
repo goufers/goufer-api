@@ -30,8 +30,8 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(ProGofer)
 class ProGoferAdmin(admin.ModelAdmin):
-    list_display = ['custom_user', 'bio', 'profession', 'hourly_rate', 'is_verified', 'created_at', 'updated_at']
-    search_fields = ['custom_user', 'bio', 'profession', 'hourly_rate', 'is_verified']
+    list_display = ['custom_user', 'bio', 'profession', 'hourly_rate', 'created_at', 'updated_at']
+    search_fields = ['custom_user', 'bio', 'profession', 'hourly_rate']
     list_filter = ['created_at', 'updated_at']
 
 
