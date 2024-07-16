@@ -78,11 +78,11 @@ class CustomUser(AbstractUser):
     def __str__(self) -> str:
         return self.email
     
-    def save(self, *args, **kwargs):
-        if not self.address:
-            Address = apps.get_model('main', 'Address')
-            self.address = Address.objects.create()  # Create a default Address
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.address:
+    #         Address = apps.get_model('main', 'Address')
+    #         self.address = Address.objects.create()  # Create a default Address
+    #     super().save(*args, **kwargs)
         
 @receiver(post_save, sender=CustomUser)
 def create_default_address(sender, instance, created, **kwargs):
@@ -114,16 +114,6 @@ class Gofer(models.Model):
     def toggle_availability(self):
         return not self.is_available
     
-class Media(models.Model):
-    gofer = models.ForeignKey(Gofer, on_delete=models.CASCADE, related_name='gofer_media')
-    media = models.ImageField(upload_to='media/gofer/media')
-    
-    def __str__(self) -> str:
-        return self.gofer.custom_user.email
-    
-    
-    
-    
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
     business_name = models.CharField(max_length=255)
@@ -138,6 +128,14 @@ class Vendor(models.Model):
     linkedin = models.URLField(blank=True, null=True)
     def __str__(self):
         return self.business_name
+
+class Media(models.Model):
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='vendor_media')
+    media = models.ImageField(upload_to='media/vendors/media')
+    
+    def __str__(self) -> str:
+        return self.gofer.custom_user.email
+    
     
 class Availability(models.Model):
     """ Defines times of gofer or entertainer availability """
@@ -192,18 +190,10 @@ class ErrandBoy(models.Model):
 
 
 class ProGofer(models.Model):
-    """Special Gofers"""
-    class ProfessionChoices(models.TextChoices):
-        Doctor = 'Doctor'
-        Lawyer = 'Lawyer'
-        Artist= 'Artist'
-
-
-    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofers')
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pro_gofer')
     bio = models.TextField(blank=True, null=True)
     profession = models.CharField(max_length=255)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

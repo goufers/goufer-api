@@ -15,7 +15,7 @@ class Location(models.Model):
         return f"Gofer at {self.latitude}, {self.longitude}"
     
 class Address(models.Model):
-    house_number = models.CharField(max_length=10, default="House number")
+    house_number = models.CharField(max_length=10, default="Number")
     street = models.CharField(max_length=255, default="Street name")
     city = models.CharField(max_length=255, default="City")
     state = models.CharField(max_length=50, default="State")
