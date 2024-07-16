@@ -31,7 +31,7 @@ class MessagePosterSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
-        return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id ** validated_data)
+        return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
         
         
 
