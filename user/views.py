@@ -6,6 +6,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from django.conf import settings
+
+from main.pagination import CustomPagination
 from .models import CustomUser, Gofer, Media
 from main.models import MessagePoster
 from rest_framework import status
@@ -17,7 +19,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
+from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
@@ -234,3 +236,16 @@ class MediaViewset(ModelViewSet):
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+    
+
+class MessagePosterViewSet(ModelViewSet):
+    queryset = MessagePoster.objects.select_related('custom_user').all()
+    serializer_class = MessagePosterSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['custom_user__first_name']
+    search_fields = ['custom_user__first_name']
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_context(self):
+        return {"currently_logged_in_user": self.request.user.id}

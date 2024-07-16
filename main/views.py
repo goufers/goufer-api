@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer
+from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer
 from user.models import ProGofer
 from user.serializers import ProGoferSerializer
-from .models import Address, Category, Document, Location, SubCategory, Reviews, MessagePoster
+from .models import Address, Category, Document, Location, SubCategory, Reviews
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
@@ -46,16 +46,6 @@ class DocumentViewSet(ModelViewSet):
     
     
     
-class MessagePosterViewSet(ModelViewSet):
-    queryset = MessagePoster.objects.select_related('user').all()
-    serializer_class = MessagePosterSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['custom_user__first_name']
-    search_fields = ['custom_user__first_name']
-    permission_classes = [IsAuthenticated]
-    
-    
     
 class LocationViewSet(ModelViewSet):
     queryset = Location.objects.all()
@@ -80,7 +70,7 @@ class SubCategoryViewSet(ModelViewSet):
     filterset_fields = ['name', 'category_id',]
     search_fields = ['name']
     def get_queryset(self):
-        return SubCategory.objects.filter(category_id=self.kwargs['category_pk'])
+        return SubCategory.objects.select_related('category').filter(category_id=self.kwargs['category_pk'])
     def get_serializer_context(self):
         return {'category_id': self.kwargs['category_pk']}
     
@@ -107,7 +97,7 @@ class ReviewsViewSet(ModelViewSet):
     
     
 class ProGoferViewSet(ModelViewSet):
-    queryset = ProGofer.objects.all()
+    queryset = ProGofer.objects.select_related('custom_user').all()
     serializer_class = ProGoferSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['profession', 'hourly_rate', 'custom_user']

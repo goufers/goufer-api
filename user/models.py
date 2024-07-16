@@ -200,3 +200,10 @@ class ProGofer(models.Model):
     def __str__(self):
         return f'{self.custom_user.first_name} - {self.profession}'
     
+    
+class MessagePoster(models.Model):
+    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
+
+    def __str__(self) -> str:
+        return self.custom_user.first_name
+    
