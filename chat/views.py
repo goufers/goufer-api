@@ -101,4 +101,4 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         conversation = get_object_or_404(Conversation, pk=room_id)
         logger.info(f"Saving message for room {room_id} and conversation {conversation.id}")
         logger.info(f"Saving message for room {room_id} and conversation {conversation.id}")
-        serializer.save(room=conversation)
+        serializer.save(room=conversation, sender=self.request.user)
