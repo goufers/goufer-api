@@ -1,6 +1,6 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import Gofer, CustomUser
+from user.models import Gofer, CustomUser, MessagePoster
 from django.core.validators import FileExtensionValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -68,13 +68,7 @@ class Document(models.Model):
     def __str__(self) -> str:
         return self.document_type
 
-    
 
-class MessagePoster(models.Model):
-    custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='message_poster')
-
-    def __str__(self) -> str:
-        return self.custom_user.first_name
     
 class Reviews(models.Model):
     message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='user_reviews')

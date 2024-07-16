@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, MessagePosterSerializer, SubCategorySerializer, ReviewsSerializer
+from main.serializers import AddressSerializer, CategorySerializer, DocumentSerializer, LocationSerializer, SubCategorySerializer, ReviewsSerializer
 from user.models import ProGofer
 from user.serializers import ProGoferSerializer
-from .models import Address, Category, Document, Location, SubCategory, Reviews, MessagePoster
+from .models import Address, Category, Document, Location, SubCategory, Reviews
 from django_filters.rest_framework import DjangoFilterBackend
 from main.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
@@ -44,19 +44,6 @@ class DocumentViewSet(ModelViewSet):
     def get_serializer_context(self):
         return {"currently_logged_in_user_id": self.request.user.id}
     
-    
-    
-class MessagePosterViewSet(ModelViewSet):
-    queryset = MessagePoster.objects.select_related('custom_user').all()
-    serializer_class = MessagePosterSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['custom_user__first_name']
-    search_fields = ['custom_user__first_name']
-    permission_classes = [IsAuthenticated]
-    
-    def get_serializer_context(self):
-        return {"currently_logged_in_user": self.request.user.id}
     
     
     

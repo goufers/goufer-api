@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 
 from main.models import Address, Reviews
-from .models import CustomUser, Gofer, Vendor, ErrandBoy, ProGofer, Media
+from .models import CustomUser, Gofer, MessagePoster, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
@@ -222,3 +222,15 @@ class ErrandBoySerializer(serializers.ModelSerializer):
     class Meta:
         model = ErrandBoy
         fields = "__all__"
+        
+        
+
+class MessagePosterSerializer(serializers.ModelSerializer):
+    custom_user = CustomUserSerializer(read_only=True)
+    class Meta:
+        model = MessagePoster
+        fields = ['id', 'custom_user']
+        
+    def create(self, validated_data):
+        currently_logged_in_user_id = self.context["currently_logged_in_user"]
+        return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
