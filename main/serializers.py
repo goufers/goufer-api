@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from user.models import CustomUser
 from .models import Address, Category, Document, SubCategory, Reviews, Location, MessagePoster 
 
 
@@ -25,7 +27,11 @@ class DocumentSerializer(serializers.ModelSerializer):
 class MessagePosterSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessagePoster
-        fields = "__all__"
+        fields = '__all__'
+        
+    def create(self, validated_data):
+        currently_logged_in_user_id = self.context["currently_logged_in_user"]
+        return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id ** validated_data)
         
         
 

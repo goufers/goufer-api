@@ -47,13 +47,16 @@ class DocumentViewSet(ModelViewSet):
     
     
 class MessagePosterViewSet(ModelViewSet):
-    queryset = MessagePoster.objects.select_related('user').all()
+    queryset = MessagePoster.objects.select_related('custom_user').all()
     serializer_class = MessagePosterSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['custom_user__first_name']
     search_fields = ['custom_user__first_name']
     permission_classes = [IsAuthenticated]
+    
+    def get_serializer_context(self):
+        return {"currently_logged_in_user": self.request.user.id}
     
     
     
@@ -80,7 +83,7 @@ class SubCategoryViewSet(ModelViewSet):
     filterset_fields = ['name', 'category_id',]
     search_fields = ['name']
     def get_queryset(self):
-        return SubCategory.objects.filter(category_id=self.kwargs['category_pk'])
+        return SubCategory.objects.select_related('category').filter(category_id=self.kwargs['category_pk'])
     def get_serializer_context(self):
         return {'category_id': self.kwargs['category_pk']}
     
@@ -107,7 +110,7 @@ class ReviewsViewSet(ModelViewSet):
     
     
 class ProGoferViewSet(ModelViewSet):
-    queryset = ProGofer.objects.all()
+    queryset = ProGofer.objects.select_related('custom_user').all()
     serializer_class = ProGoferSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['profession', 'hourly_rate', 'custom_user']
