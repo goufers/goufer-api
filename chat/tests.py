@@ -1,118 +1,91 @@
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from user.models import CustomUser, Gofer, Vendor, ProGofer
-from main.models import MessagePoster
-from .models import Conversation, ChatMessage
-from .serializers import ConversationSerializer, ChatMessageSerializer
-from .views import ConversationViewSet, ChatMessageViewSet
-from channels.testing import WebsocketCommunicator
-from django.conf import settings
+# chat/test/test_url.py
+
 from django.urls import reverse
-from rest_framework.test import APIClient
-import jwt
-from goufer.asgi import application
+from rest_framework import status
+from rest_framework.test import APITestCase, APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+from user.models import CustomUser, Gofer, Vendor, ProGofer, ErrandBoy, MessagePoster
+from chat.models import Conversation, ChatMessage
+from main.models import Category, SubCategory
 
-User = get_user_model()
-
-class ChatAppTests(TestCase):
+class ChatAPITestCase(APITestCase):
     def setUp(self):
-        sub_category_id = 1  # Replace with an actual sub_category_id that exists in your database
-        self.user1 = User.objects.create_user(email='moshood@gmail.com', password='go2work22', phone_number="+2348039958684")
-        self.user2 = User.objects.create_user(email='lanre@gmail.com', password='go2work22', phone_number="+2349029958684")
-        self.message_poster = MessagePoster.objects.create(custom_user=self.user1)
-        self.gofer = Gofer.objects.create(
-            custom_user=self.user2,
-            expertise='Some expertise',
-            mobility_means='Motorcycle',
-            sub_category_id=sub_category_id,  # Provide a valid sub_category_id
-            charges=0,
-            is_available=True,
-            avg_rating=0
-        )
+        # Create users for authentication
+        self.user = CustomUser.objects.create_user(email='testuser@example.com', password='testpassword', phone_number='1234567890')
+        self.gofer_user_custom = CustomUser.objects.create_user(email='goferuser@example.com', password='testpassword', phone_number='0987654321')
 
-        self.conversation = Conversation.objects.create(
-            message_poster=self.message_poster,
-            gofer=self.gofer,
-        )
+        # Create a category
+        self.category = Category.objects.create(category_name='TestCategory')
         
-        self.chat_message = ChatMessage.objects.create(
-            room=self.conversation,
-            sender=self.user1,
-            content='Hello!'
-        )
+        # Create a sub-category
+        self.subcategory = SubCategory.objects.create(name='TestSubCategory', category=self.category)
 
-    # Your other test methods remain unchanged
+        # Create instances for different user types
+        self.gofer_user = Gofer.objects.create(custom_user=self.gofer_user_custom, expertise='Cleaning', sub_category=self.subcategory)
+        self.vendor_user = Vendor.objects.create(custom_user=self.user, category=self.category)
+        self.progofer = ProGofer.objects.create(custom_user=self.user, hourly_rate=50.00)
+        self.errand_boy_user = ErrandBoy.objects.create(user=self.user)
 
+        # Initialize APIClient for making requests
+        self.client = APIClient()
 
-    # def test_conversation_creation(self):
-    #     self.assertEqual(self.conversation.message_poster, self.message_poster)
-    #     self.assertEqual(self.conversation.gofer, self.gofer)
-    #     self.assertTrue(self.conversation.is_open)
+        # Obtain JWT token for the user
+        refresh = RefreshToken.for_user(self.user)
+        self.token = str(refresh.access_token)
+        
+        # Include the JWT token in the request headers
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token)
 
-    # def test_chat_message_creation(self):
-    #     self.assertEqual(self.chat_message.room, self.conversation)
-    #     self.assertEqual(self.chat_message.sender, self.user1)
-    #     self.assertEqual(self.chat_message.content, 'Hello!')
+        # Create sample message posters
+        self.message_poster = MessagePoster.objects.create(custom_user=self.user)
+        self.gofer_message_poster = MessagePoster.objects.create(custom_user=self.gofer_user.custom_user)
 
-    # def test_conversation_serializer(self):
-    #     serializer = ConversationSerializer(instance=self.conversation)
-    #     data = serializer.data
-    #     self.assertEqual(data['message_poster'], self.message_poster.id)
-    #     self.assertEqual(data['gofer'], self.gofer.id)
-    #     self.assertTrue(data['is_open'])
+        # Create sample conversations
+        self.conversation = Conversation.objects.create(message_poster=self.message_poster, is_open=True)
+        self.gofer_conversation = Conversation.objects.create(message_poster=self.gofer_message_poster, gofer=self.gofer_user, is_open=True)
 
-    # def test_chat_message_serializer(self):
-    #     serializer = ChatMessageSerializer(instance=self.chat_message)
-    #     data = serializer.data
-    #     self.assertEqual(data['room'], self.conversation.id)
-    #     self.assertEqual(data['sender'], self.user1.id)
-    #     self.assertEqual(data['content'], 'Hello!')
+    def test_conversation_list(self):
+        # Test the conversation list endpoint
+        url = reverse('conversation-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Assuming there are two conversations
 
-    # async def test_websocket_connect_and_send_message(self):
-    #     token = jwt.encode({'user_id': self.user1.id}, settings.SECRET_KEY, algorithm='HS256')
-    #     communicator = WebsocketCommunicator(application, f'/ws/api/v1/chat/conversation/{self.conversation.id}/', headers={'Authorization': f'Bearer {token.decode()}'})
-    #     connected, subprotocol = await communicator.connect()
-    #     self.assertTrue(connected)
+    def test_conversation_detail(self):
+        # Test the conversation detail endpoint
+        url = reverse('conversation-detail', args=[self.conversation.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Adjust the assertion to check specific fields in response.data
+        self.assertEqual(response.data['id'], self.conversation.id)
+        self.assertEqual(response.data['is_open'], self.conversation.is_open)
+        
+        # Check if the message poster's name is in the response (adjust as per your model structure)
+        self.assertIn(self.message_poster.custom_user.first_name, str(response.data))
+    
+    def test_create_chat_message(self):
+        url = reverse('conversation-messages-list', args=[self.conversation.id])
+        data = {
+            'content': 'Hello, world!',
+            'room': self.conversation.id,
+            'sender': self.user.id,
+        }
+        
+        response = self.client.post(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ChatMessage.objects.count(), 1)
+        self.assertEqual(ChatMessage.objects.get().content, 'Hello, world!')
+    
+    def test_chat_message_list(self):
+        # Create a sample chat message
+        chat_message = ChatMessage.objects.create(room=self.conversation, sender=self.user, content='Test Message')
 
-    #     await communicator.send_json_to({
-    #         'message': 'Hello from user1'
-    #     })
-
-    #     response = await communicator.receive_json_from()
-    #     self.assertEqual(response['message'], 'Hello from user1')
-    #     self.assertEqual(response['sender'], self.user1.username)
-
-    #     await communicator.disconnect()
-
-    # async def test_websocket_authentication_failure(self):
-    #     communicator = WebsocketCommunicator(application, f'/ws/api/v1/chat/conversation/{self.conversation.id}/')
-    #     connected, subprotocol = await communicator.connect()
-    #     self.assertFalse(connected)
-
-    # async def test_websocket_receive_message(self):
-    #     token = jwt.encode({'user_id': self.user1.id}, settings.SECRET_KEY, algorithm='HS256')
-    #     communicator = WebsocketCommunicator(application, f'/ws/api/v1/chat/conversation/{self.conversation.id}/', headers={'Authorization': f'Bearer {token.decode()}'})
-    #     await communicator.connect()
-
-    #     await communicator.send_json_to({
-    #         'message': 'Hello from user1'
-    #     })
-
-    #     response = await communicator.receive_json_from()
-    #     self.assertEqual(response['message'], 'Hello from user1')
-    #     self.assertEqual(response['sender'], self.user1.username)
-
-    #     await communicator.disconnect()
-
-    # def test_api_endpoints(self):
-    #     client = APIClient()
-
-    #     # Test ConversationViewSet endpoints
-    #     url = reverse('conversation-list')
-    #     response = client.get(url)
-    #     self.assertEqual(response.status_code, 200)
-
-    #     # Test ChatMessageViewSet endpoints
-    #     url = reverse('conversation-messages-list', kwargs={'conversation_lookup': self.conversation.id})
-    #     response = client.get(url)
-    #     self.assertEqual(response.status_code, 200)
+        # Test the chat message list endpoint
+        url = reverse('conversation-messages-list', args=[self.conversation.id])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['content'], 'Test Message')
