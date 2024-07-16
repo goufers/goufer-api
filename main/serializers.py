@@ -27,7 +27,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 class MessagePosterSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessagePoster
-        fields = '__all__'
+        fields = ['id']
         
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
