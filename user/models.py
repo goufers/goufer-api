@@ -117,7 +117,7 @@ class Gofer(models.Model):
 class Vendor(models.Model):
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='vendor')
     business_name = models.CharField(max_length=255)
-    category = models.OneToOneField('main.Category', on_delete=models.CASCADE, related_name='vendor_category')
+    sub_category = models.OneToOneField('main.SubCategory', on_delete=models.CASCADE, related_name='vendor_subcategory')
     website = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, DestroyAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer
@@ -214,19 +214,24 @@ def ToggleAvailability(request):
     except ObjectDoesNotExist:
         return Response({'error': 'This user is not a Gofer'})
     
-class CurrentUserView(RetrieveAPIView):
+class CurrentUserRetrieveView(RetrieveAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+    
+class CurrentUserUpdateView(UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomUserSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return user
 
 class MediaViewset(ModelViewSet):
     serializer_class = MediaSerializer
     queryset = Media.objects.all()
-    def get_queryset(self):
-        vendor_id = self.kwargs['vendor_pk']
-        return Media.objects.filter(vendor__id=vendor_id)
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -234,3 +239,21 @@ class MediaViewset(ModelViewSet):
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+    
+class UsersViewset(ModelViewSet):
+    serializer_class = CustomUserSerializer
+    queryset = CustomUser.objects.all()
+    http_method_names = ['get', 'put', 'delete', 'patch']
+    
+    def update(self, request, *args, **kwargs):
+        if self.kwargs['pk'] != request.user.id:
+            return Response({"detail":"You are not this user"}, staus=status.HTTP_401_UNAUTHORIZED)
+        return super().update(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action in ['retrieve', 'list']:
+            permission_classes =  [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+

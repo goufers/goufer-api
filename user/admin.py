@@ -19,9 +19,9 @@ class GoferAdmin(admin.ModelAdmin):
 
 @admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
-    list_display = ['business_name', 'bio', 'category']
-    search_fields = ['business_name', 'category']
-    list_filter = ["business_name", "category"]
+    list_display = ['business_name', 'bio', 'sub_category']
+    search_fields = ['business_name', 'sub_category']
+    list_filter = ["business_name", "sub_category"]
     
     
 @admin.register(ErrandBoy)

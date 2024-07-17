@@ -141,9 +141,6 @@ class GoferSerializer(serializers.ModelSerializer):
         custom_user.gender = custom_user_data.get('gender', custom_user.gender)
         custom_user.location = custom_user_data.get('location', custom_user.location)
         address_data = custom_user_data.get('address', custom_user.address)
-        print(address)
-        print(address_data)
-        print(custom_user.address)
         address.house_number = address_data['house_number']
         address.street = address_data['street']
         address.city = address_data['city']
@@ -166,7 +163,7 @@ class VendorCreateSerializer(serializers.ModelSerializer):
         model = Vendor
         fields = [
             'business_name', 'website', 'bio', 'facebook', 'twitter',
-            'instagram', 'linkedin', 'category'
+            'instagram', 'linkedin', 'sub_category'
         ]
     def create(self, validated_data):
         custom_user = self.context['request'].user
@@ -175,6 +172,8 @@ class VendorCreateSerializer(serializers.ModelSerializer):
         
 class VendorSerializer(serializers.ModelSerializer):
     vendor_media = MediaSerializer(many=True, read_only=True)
+    custom_user = CustomUserSerializer()
+    sub_category = SubCategorySerializer(read_only=True)
     class Meta:
         model = Vendor
         fields = "__all__"
