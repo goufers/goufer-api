@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, Gofer, Vendor, ErrandBoy, Media
+from .models import CustomUser, Gofer, Schedule, Vendor, ErrandBoy, Media
 from main.models import MessagePoster
 
 
@@ -39,3 +39,13 @@ class MessagePosterAdmin(admin.ModelAdmin):
 @admin.register(Media)
 class Media(admin.ModelAdmin):
     list_display = ['vendor', 'media']
+
+
+
+@admin.register(Schedule)
+class ScheduleAdmin(admin.ModelAdmin):
+    list_display = ['id','pro_gofer', 'day_of_week_available', 'start_time_available', 'end_time_available', 'created_at']
+    search_fields = ['pro_gofer', 'day', 'from_hour', 'to_hour']
+    list_select_related = ['pro_gofer']
+    list_filter = ['created_at']
+    list_per_page = 10

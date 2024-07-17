@@ -196,6 +196,7 @@ class ProGofer(models.Model):
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_available = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.custom_user.first_name} - {self.profession}'
@@ -206,4 +207,30 @@ class MessagePoster(models.Model):
 
     def __str__(self) -> str:
         return self.custom_user.first_name
+    
+    
+    
+class Schedule(models.Model):
+
+    DAY_CHOICES = [
+        ('mon', 'Monday'),
+        ('tues', 'Tuesday'),
+        ('wed', 'Wednesday'),
+        ('thur', 'Thursday'),
+        ('fri', 'Friday'),
+        ('sat', 'Saturday'),
+        ('sun', 'Sunday'),
+    ]
+
+    pro_gofer = models.OneToOneField(ProGofer, on_delete=models.CASCADE, related_name='schedule')
+    day_of_week_available = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time_available = models.TimeField()
+    end_time_available = models.TimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    def __str__(self):
+        return f"{self.pro_gofer.custom_user.first_name} is available on {self.day} from {self.start_time_available} to {self.end_time_available}"
+
     

@@ -84,4 +84,23 @@ def update_gofer_rating(sender, instance, **kwargs):
     
     def __str__(self) -> str:
         return f"This is the review of {self.reviews.gofer}"
+    
+    
+
+###############################################TEST CODE################################
+
+class Booking(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    )
+
+    expatriate_name = models.CharField(max_length=100)
+    date = models.DateField()
+    purpose = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    def __str__(self):
+        return f"{self.expatriate_name} - {self.date}"
 

@@ -1,13 +1,7 @@
 from django.contrib import admin
-from .models import Bank, Wallet, Transaction, Schedule, ProGofer, Booking
+from .models import Bank, Wallet, Transaction, ProGofer, Booking
 
 
-class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ['pro_gofer', 'day', 'from_hour', 'to_hour']
-    search_fields = ['pro_gofer', 'day', 'from_hour', 'to_hour']
-    list_select_related = ['pro_gofer']
-    list_filter = ['created_at']
-    list_per_page = 10
 
 
 class BankAdmin(admin.ModelAdmin):
@@ -37,7 +31,7 @@ class ProGoferAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['message_poster', 'pro_gofer', 'schedule', 'duration', 'status']
+    list_display = ['message_poster', 'pro_gofer', 'duration', 'status']
     search_fields = ['message_poster', 'pro_gofer', 'is_active', 'duration']
     list_filter = ['booked_at']
     list_select_related = ['message_poster', 'pro_gofer']
@@ -49,4 +43,4 @@ class BookingAdmin(admin.ModelAdmin):
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Wallet, WalletAdmin)
 admin.site.register(Bank, BankAdmin)
-admin.site.register(Schedule, ScheduleAdmin)
+
