@@ -3,7 +3,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToke n
 from user.models import CustomUser, Gofer, Vendor, ProGofer, ErrandBoy, MessagePoster
 from chat.models import Conversation, ChatMessage
 from main.models import Category, SubCategory
