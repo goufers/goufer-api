@@ -4,6 +4,8 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, UpdateModelMixin
+from rest_framework.viewsets import GenericViewSet
 from django.db.models import Q
 from django.conf import settings
 
@@ -251,7 +253,7 @@ class MessagePosterViewSet(ModelViewSet):
         return {"currently_logged_in_user": self.request.user.id}
     
     
-class ScheduleViewSet(ModelViewSet):
+class ScheduleViewSet(RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, UpdateModelMixin, GenericViewSet):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):

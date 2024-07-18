@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Avg
-
 from django.apps import apps
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -232,5 +231,25 @@ class Schedule(models.Model):
 
     def __str__(self):
         return f"{self.pro_gofer.custom_user.first_name} is available on {self.day} from {self.start_time_available} to {self.end_time_available}"
+    
+class Booking(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    )
+    
+    scheduled_date = models.DateTimeField()
+    from_time = models.TimeField()
+    to_time = models.TimeField()
+    purpose = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings_created')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.scheduled_day} from {self.schedule.from_time} to {self.schedule.to_time}"
 
     
