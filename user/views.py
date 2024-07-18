@@ -5,8 +5,6 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, UpdateModelMixin
-from rest_framework.viewsets import GenericViewSet
 from django.db.models import Q
 from django.conf import settings
 from rest_framework.decorators import action
@@ -254,7 +252,7 @@ class MessagePosterViewSet(ModelViewSet):
         return {"currently_logged_in_user": self.request.user.id}
     
     
-class ScheduleViewSet(RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, UpdateModelMixin, GenericViewSet):
+class ScheduleViewSet(ModelViewSet):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
@@ -266,7 +264,7 @@ class ScheduleViewSet(RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, U
     
 class BookingViewSet(ModelViewSet):
     serializer_class = BookingSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     def get_queryset(self):
         return Booking.objects.select_related('pro_gofer').select_related('message_poster').filter(pro_gofer_id=self.kwargs['pro_gofer_pk'])
 
@@ -287,6 +285,9 @@ class BookingViewSet(ModelViewSet):
         booking.save()
         serializer = self.get_serializer(booking)
         return Response(serializer.data)
+    
+    def get_serializer_context(self):
+        return {'pro_gofer_id': self.kwargs['pro_gofer_pk']}
     
         
         

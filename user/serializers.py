@@ -249,7 +249,11 @@ class MessagePosterSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['id', 'scheduled_date', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'pro_gofer', 'created_at', 'updated_at']
+        fields = ['id', 'scheduled_date', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'created_at', 'updated_at']
+        
+    def create(self, validated_data):
+        pro_gofer_id = self.context["pro_gofer_id"]
+        return Booking.objects.create(pro_gofer_id=pro_gofer_id, **validated_data)
         
         
     

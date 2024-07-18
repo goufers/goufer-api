@@ -231,7 +231,7 @@ class Schedule(models.Model):
         ('sun', 'Sunday'),
     ]
 
-    pro_gofer = models.OneToOneField(ProGofer, on_delete=models.CASCADE, related_name='schedule')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedules')
     day_of_week_available = models.CharField(max_length=10, choices=DAY_CHOICES)
     start_time_available = models.TimeField()
     end_time_available = models.TimeField()

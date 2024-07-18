@@ -29,7 +29,7 @@ vendor_router = routers.NestedDefaultRouter(router, 'vendors', lookup='vendor')
 vendor_router.register('media', MediaViewset, basename='vendor_media')
 
 pro_gofer_router = routers.NestedDefaultRouter(router, 'pro-gofers', lookup='pro_gofer')
-pro_gofer_router.register('schedule', ScheduleViewSet, basename='pro_gofer_schedule')
+pro_gofer_router.register('schedules', ScheduleViewSet, basename='pro_gofer_schedules')
 
 pro_gofer_router.register('bookings', BookingViewSet, basename='pro_gofer_booking')
 
