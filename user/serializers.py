@@ -249,7 +249,7 @@ class MessagePosterSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['id', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'pro_gofer', 'created_at', 'updated_at']
+        fields = ['id', 'scheduled_date', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'pro_gofer', 'created_at', 'updated_at']
         
         
     

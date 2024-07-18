@@ -249,7 +249,7 @@ class Booking(models.Model):
         ('declined', 'Declined'),
     )
     
-    scheduled_date = models.DateTimeField()
+    scheduled_date = models.DateField()
     from_time = models.TimeField()
     to_time = models.TimeField()
     purpose = models.TextField()
