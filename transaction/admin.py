@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Wallet, Transaction, ProGofer, Booking
+from .models import Bank, Wallet, Transaction, ProGofer
 
 
 
@@ -29,14 +29,6 @@ class ProGoferAdmin(admin.ModelAdmin):
     list_filter = ['created_at', 'updated_at']
 
 
-@admin.register(Booking)
-class BookingAdmin(admin.ModelAdmin):
-    list_display = ['message_poster', 'pro_gofer', 'duration', 'status']
-    search_fields = ['message_poster', 'pro_gofer', 'is_active', 'duration']
-    list_filter = ['booked_at']
-    list_select_related = ['message_poster', 'pro_gofer']
-    list_per_page = 10
-    list_display_links = ['message_poster', 'pro_gofer', 'status']
 
 
 

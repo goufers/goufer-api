@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 
 from main.models import Address, Reviews
-from .models import CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
+from .models import Booking, CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
@@ -244,6 +244,14 @@ class MessagePosterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
         return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
+    
+    
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['id', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'pro_gofer', 'created_at', 'updated_at']
+        
+        
     
 
 

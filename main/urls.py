@@ -1,8 +1,7 @@
 from rest_framework_nested import routers
 from user.errand_boy_views import ErrandBoyViewset
 from user.vendor_views import VendorViewSet
-
-from user.views import GoferViewset, MediaViewset, ScheduleViewSet
+from user.views import BookingViewSet, GoferViewset, MediaViewset, ScheduleViewSet
 from .views import CategoryViewSet, DocumentViewSet, LocationViewSet, AddressViewSet, ProGoferViewSet, ReviewsViewSet, SubCategoryViewSet
 
 router = routers.DefaultRouter()
@@ -32,5 +31,6 @@ vendor_router.register('media', MediaViewset, basename='vendor_media')
 pro_gofer_router = routers.NestedDefaultRouter(router, 'pro-gofers', lookup='pro_gofer')
 pro_gofer_router.register('schedule', ScheduleViewSet, basename='pro_gofer_schedule')
 
+pro_gofer_router.register('bookings', BookingViewSet, basename='pro_gofer_booking')
 
 urlpatterns = router.urls + category_router.urls + gofer_router.urls + vendor_router.urls + pro_gofer_router.urls

@@ -111,33 +111,6 @@ class ProGoferViewSet(ModelViewSet):
     
 
 
-########################TEST CODE #################################
-
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from .models import Booking
-from .serializers import BookingSerializer
-
-class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
-
-    @action(detail=True, methods=['post'])
-    def accept_booking(self, request, pk=None):
-        booking = self.get_object()
-        booking.status = 'accepted'
-        booking.save()
-        serializer = self.get_serializer(booking)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def decline_booking(self, request, pk=None):
-        booking = self.get_object()
-        booking.status = 'declined'
-        booking.save()
-        serializer = self.get_serializer(booking)
-        return Response(serializer.data)
 
     
     

@@ -1,6 +1,7 @@
 import re
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -8,9 +9,9 @@ from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin, DestroyM
 from rest_framework.viewsets import GenericViewSet
 from django.db.models import Q
 from django.conf import settings
-
+from rest_framework.decorators import action
 from main.pagination import CustomPagination
-from .models import CustomUser, Gofer, Media, Schedule
+from .models import Booking, CustomUser, Gofer, Media, Schedule
 from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -21,7 +22,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer, ScheduleSerializer
+from .serializers import BookingSerializer, GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer, ScheduleSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
@@ -260,5 +261,33 @@ class ScheduleViewSet(RetrieveModelMixin, CreateModelMixin, DestroyModelMixin, U
         return Schedule.objects.select_related('pro_gofer').filter(pro_gofer_id=self.kwargs['pro_gofer_pk'])
     
     def get_serializer_context(self):
-        return {'pro_gofer_id': self.kwargs['pro_gofer_pk'],}
+        return {'pro_gofer_id': self.kwargs['pro_gofer_pk']}
+    
+    
+class BookingViewSet(ModelViewSet):
+    serializer_class = BookingSerializer
+    # permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Booking.objects.select_related('pro_gofer').select_related('message_poster').filter(pro_gofer_id=self.kwargs['pro_gofer_pk'])
+
+    @action(detail=True, methods=['post'])
+    def accept_booking(self, request, pk):
+        booking = get_object_or_404(Booking, pk=pk)
+        # booking = self.get_object()
+        booking.status = 'accepted'
+        booking.save()
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def decline_booking(self, request, pk=None):
+        booking = get_object_or_404(Booking, pk=pk)
+        # booking = self.get_object()
+        booking.status = 'declined'
+        booking.save()
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+    
+        
+        
     

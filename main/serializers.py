@@ -48,15 +48,7 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
         
-################TEST CODE #################################
 
-from rest_framework import serializers
-from .models import Booking
-
-class BookingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Booking
-        fields = '__all__'
 
         
 
