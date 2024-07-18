@@ -56,30 +56,6 @@ def generate_hour_choices():
     return hours
 
 
-class Schedule(models.Model):
-    """Professional users schedules"""
-    DAY_CHOICES = [
-        ('Mon', 'Monday'),
-        ('Tues', 'Tuesday'),
-        ('Wed', 'Wednesday'),
-        ('Thur', 'Thursday'),
-        ('Fri', 'Friday'),
-        ('Sat', 'Saturday'),
-        ('Sun', 'Sunday'),
-    ]
-
-    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedules')
-    day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    from_hour = models.CharField(max_length=10, choices=generate_hour_choices())
-    to_hour = models.CharField(max_length=10, choices=generate_hour_choices())
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['day', '-created_at']
-
-    def __str__(self):
-        return f"{self.pro_gofer.custom_user.first_name} available on {self.day} from {self.from_hour} to {self.to_hour}"
 
 
 class Booking(models.Model):
@@ -87,13 +63,13 @@ class Booking(models.Model):
     BOOKING_CHOICES = [('Active', 'Active'), ('Terminated', 'Terminated'), ('Settled', 'Settled'), ('Pending Approval', 'Pending Approval')]
     message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings')
     pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
-    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='bookings')
     duration = models.PositiveSmallIntegerField(_('How long in hours?'), default=1)
     is_active = models.BooleanField(default=True)
     status = models.CharField(max_length=20, choices=BOOKING_CHOICES, default='Pending Approval')
-    comment = models.TextField(blank=True, null=True)  # For pro_gofer's comment on decline
     booked_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"
+
+

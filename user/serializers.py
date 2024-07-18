@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 
 from main.models import Address, Reviews
-from .models import CustomUser, Gofer, MessagePoster, Vendor, ErrandBoy, ProGofer, Media
+from .models import CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
@@ -153,13 +153,23 @@ class GoferSerializer(serializers.ModelSerializer):
         custom_user.save()
 
         return instance
+    
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        fields = ['id', 'day_of_week_available', 'start_time_available', 'end_time_available']
+        
+    def create(self, validated_data):
+        user_id = self.context['pro_gofer_id']
+        return Schedule.objects.create(pro_gofer_id=user_id, **validated_data)
 
     
 class ProGoferSerializer(serializers.ModelSerializer):
     custom_user = CustomUserSerializer(read_only=True)
+    schedule = ScheduleSerializer(read_only=True)
     class Meta:
         model = ProGofer
-        fields = ['id', 'custom_user', 'bio', 'profession', 'hourly_rate']
+        fields = ['id', 'custom_user', 'bio', 'profession', 'hourly_rate', 'schedule']
     
     def create(self, validated_data):
         user_id = self.context['currently_logged_in_user_id']
@@ -234,3 +244,7 @@ class MessagePosterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
         return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
+    
+
+
+        
