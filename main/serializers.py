@@ -1,7 +1,5 @@
 from rest_framework import serializers
-from .models import Address, Category, Document, SubCategory, Reviews, Location, MessagePoster 
-
-
+from .models import Address, Category, Document, SubCategory, Reviews, Location 
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -21,12 +19,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         return Document.objects.create(user_id=currently_logged_in_user_id, **validated_data)
         
 
-
-class MessagePosterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MessagePoster
-        fields = "__all__"
-        
         
 
 class SubCategorySerializer(serializers.ModelSerializer):
@@ -54,6 +46,18 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = "__all__"
+        
+        
+################TEST CODE #################################
+
+from rest_framework import serializers
+from .models import Booking
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = '__all__'
+
         
 
    

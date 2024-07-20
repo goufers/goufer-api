@@ -1,13 +1,7 @@
 from django.contrib import admin
-from .models import Bank, Wallet, Transaction, Schedule, ProGofer, Booking
+from .models import Bank, Wallet, Transaction, ProGofer, Booking
 
 
-class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ['pro_gofer', 'day', 'from_hour', 'to_hour']
-    search_fields = ['pro_gofer', 'day', 'from_hour', 'to_hour']
-    list_select_related = ['pro_gofer']
-    list_filter = ['created_at']
-    list_per_page = 10
 
 
 class BankAdmin(admin.ModelAdmin):
@@ -30,14 +24,14 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(ProGofer)
 class ProGoferAdmin(admin.ModelAdmin):
-    list_display = ['custom_user', 'bio', 'profession', 'hourly_rate', 'is_verified', 'created_at', 'updated_at']
-    search_fields = ['custom_user', 'bio', 'profession', 'hourly_rate', 'is_verified']
+    list_display = ['custom_user', 'bio', 'profession', 'hourly_rate', 'created_at', 'updated_at']
+    search_fields = ['custom_user', 'bio', 'profession', 'hourly_rate']
     list_filter = ['created_at', 'updated_at']
 
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['message_poster', 'pro_gofer', 'schedule', 'duration', 'status']
+    list_display = ['message_poster', 'pro_gofer', 'duration', 'status']
     search_fields = ['message_poster', 'pro_gofer', 'is_active', 'duration']
     list_filter = ['booked_at']
     list_select_related = ['message_poster', 'pro_gofer']
@@ -49,4 +43,4 @@ class BookingAdmin(admin.ModelAdmin):
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Wallet, WalletAdmin)
 admin.site.register(Bank, BankAdmin)
-admin.site.register(Schedule, ScheduleAdmin)
+

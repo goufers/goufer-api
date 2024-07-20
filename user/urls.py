@@ -16,6 +16,7 @@ urlpatterns = [
 router = routers.DefaultRouter()
 router.register('register', views.RegisterUserView, basename='register')
 router.register('login', views.LoginUserView, basename='login')
+router.register('message-posters', views.MessagePosterViewSet, basename='message-poster')
 
 router.register('users', views.UsersViewset, basename='users')
 

@@ -8,13 +8,13 @@ from rest_framework.permissions import (
     )
 from django.shortcuts import get_object_or_404
 from .models import (
-    Wallet, Transaction, Bank, Schedule, ProGofer, Booking, MessagePoster
+    Wallet, Transaction, Bank, ProGofer, Booking, MessagePoster
     )
 
 from .serializers import (
     BankSerializer, 
     FundWalletSerializer, TransferFundsSerializer,
-    ScheduleSerializer, BookingSerializer,
+    BookingSerializer,
     TransactionSerializer
     )
 import requests
@@ -154,37 +154,6 @@ class TransactionListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-class ScheduleCreateView(APIView):
-    """Create a new schedule"""
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        user = request.user
-        if not isinstance(user, ProGofer):
-            return Response({'error': 'Sorry, you do not have permission to create schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        
-        # user = get_object_or_404(ProGofer, pk=request.user.pk)
-        data = request.data.copy()
-        data['gofer'] = request.user.id
-        serializer = ScheduleSerializer(data=data)
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ScheduleListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        """List schedules for the authenticated user"""
-        if not isinstance(request.user, ProGofer):
-            return Response({'error': 'Sorry, you do not have permission to view schedules.'}, status=status.HTTP_403_FORBIDDEN)
-        user = get_object_or_404(ProGofer, pk=request.user.pk)
-        schedules = Schedule.objects.filter(gofer=user)
-        serializer = ScheduleSerializer(schedules, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class BookingCreateView(APIView):

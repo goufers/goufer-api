@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Wallet, Transaction, Bank, Schedule, Booking
+from .models import Wallet, Transaction, Bank, Booking
 
 class WalletSerializer(serializers.ModelSerializer):
     """Users Wallet model serializer"""
@@ -31,17 +31,6 @@ class TransferFundsSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 
-
-
-
-class ScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Schedule
-        fields = ['id', 'gofer', 'day', 'from_hour', 'to_hour', 'duration', 'created_at', 'updated_at']
-
-
-    def create(self, validated_data):
-        return Schedule.objects.create(**validated_data)
 
 
 class BookingSerializer(serializers.ModelSerializer):
