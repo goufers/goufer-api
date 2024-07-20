@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Bank, Wallet, Transaction, ProGofer, Booking
+from .models import Bank, StripeUser, Wallet, Transaction, ProGofer, Booking
 
 
 
@@ -44,3 +44,4 @@ admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Wallet, WalletAdmin)
 admin.site.register(Bank, BankAdmin)
 
+admin.site.register(StripeUser)

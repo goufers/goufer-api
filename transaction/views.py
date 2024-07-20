@@ -8,7 +8,7 @@ from rest_framework.permissions import (
     )
 from django.shortcuts import get_object_or_404
 from .models import (
-    Wallet, Transaction, Bank, ProGofer, Booking, MessagePoster
+    StripeUser, Wallet, Transaction, Bank, ProGofer, Booking, MessagePoster
     )
 
 from .serializers import (
@@ -22,8 +22,14 @@ from decimal import Decimal
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from user.models import CustomUser, Gofer
+from user.models import CustomUser, Gofer, Schedule
 from django.db.models import Count
+import stripe
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+stripe.api_key = "sk_test_51PcjKqLFE9BMR2wqWSRB8YJ50qPQoe5lBQTwdqh8LE3vGF48a4aUwzgFQuKrZm255fmPG8exI3IG3KlrxYNa9VTh00g49Ra9B9"
 
 
 paystack_secret_key = 'sk_test_1a2483045f4961552f4f516ae5cfd2e0ef9c2fbf'
@@ -152,7 +158,6 @@ class TransactionListView(APIView):
         transactions = Transaction.objects.filter(wallet__custom_user=request.user).order_by('-created_at')
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
 
 
@@ -235,3 +240,82 @@ class BookingDeclineView(APIView):
             booking.save()
             return Response({'status': 'Booking declined.'}, status=status.HTTP_200_OK)
         return Response({'error': 'You are not authorized to decline this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+class CreatePaymentIntentView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            user = request.user
+            amount = request.data.get('amount')
+            stripe_user = StripeUser.objects.get(user=user)
+            if stripe_user.stripe_id is None:
+                customer = stripe.Customer.create(
+                    name=user.get_full_name(),
+                    email=user.email,
+                    phone=user.phone_number,
+                    balance=int(Wallet.objects.get(custom_user=user).balance)
+                )
+                stripe_user.stripe_id = customer.get('id')
+                stripe_user.save()
+            else:
+                customer = stripe.Customer.retrieve(stripe_user.stripe_id)
+            intent = stripe.PaymentIntent.create(
+                customer=user.stripe_user.stripe_id,
+                amount=int(float(amount) * 100),
+                currency='usd',
+                automatic_payment_methods={
+                    'enabled': True
+                    },
+                metadata={'user_id': user.id}
+            )
+            return Response({'payment_intent_id': intent}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class ConfirmPaymentIntentView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            payment_intent_id = request.data.get('payment_intent_id')
+            payment_intent = stripe.PaymentIntent.confirm(
+                payment_intent_id,
+                return_url=request.build_absolute_uri(reverse("fund_wallet"))
+            )
+            if payment_intent.status == 'succeeded':
+                user = request.user
+                wallet = Wallet.objects.get(custom_user=user)
+                amount = payment_intent.amount / 100  # Convert cents to dollars
+                wallet.balance += Decimal(amount)
+                wallet.save()
+
+                return Response({'message': 'Payment succeeded', 'balance': wallet.balance}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Payment not successful'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError as e:
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return JsonResponse({'error': 'Invalid signature'}, status=400)
+
+    if event['type'] == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        user_id = payment_intent['metadata']['user_id']
+        amount = payment_intent['amount_received'] / 100  # Convert cents to dollars
+
+        user = CustomUser.objects.get(id=user_id)
+        wallet = Wallet.objects.get(user=user)
+        wallet.balance += amount
+        wallet.save()
+
+    return JsonResponse({'status': 'success'}, status=200)
+

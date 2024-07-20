@@ -14,4 +14,6 @@ urlpatterns = [
     path('bookings/<int:pk>/cancel/', views.BookingCancelView.as_view(), name='booking-cancel'),
     path('bookings/accept/', views.BookingAcceptView.as_view(), name='booking-accept'),
     path('bookings/decline/', views.BookingDeclineView.as_view(), name='booking-decline'),
+    path('create-payment-intent/', views.CreatePaymentIntentView.as_view(), name='create-payment-intent'),
+    path('confirm-payment-intent/', views.ConfirmPaymentIntentView.as_view(), name='confirm-payment-intent'),
 ]

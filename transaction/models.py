@@ -72,4 +72,9 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"
 
+class StripeUser(models.Model):
+    """User's Stripe Customer ID"""
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="stripe_user")
+    stripe_id = models.CharField(max_length=30, blank=True, null=True)
+    
 

@@ -23,7 +23,7 @@ from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerial
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
-from transaction.models import Wallet
+from transaction.models import StripeUser, Wallet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.views import APIView
@@ -53,6 +53,8 @@ class RegisterUserView(ModelViewSet):
                 wallet.save()
                 message_poster = MessagePoster.objects.create(custom_user=user)
                 message_poster.save()
+                stripe_user = StripeUser.objects.create(user=user)
+                stripe_user.save()
                 refresh = RefreshToken.for_user(user)
                 return_message['refresh'] = str(refresh)
                 return_message['access'] = str(refresh.access_token)
@@ -273,7 +275,7 @@ class UsersViewset(ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         if self.kwargs['pk'] != request.user.id:
-            return Response({"detail":"You are not this user"}, staus=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail":"You are not this user"}, status=status.HTTP_401_UNAUTHORIZED)
         return super().update(request, *args, **kwargs)
     
     def get_permissions(self):
