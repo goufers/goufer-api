@@ -17,6 +17,8 @@ DATABASES = {
     'default': dj_database_url.config()
 }
 
+# CELERY_BROKER_URL = 'redis://localhost:6379/1'
+
 
 
 
