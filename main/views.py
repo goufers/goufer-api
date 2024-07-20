@@ -96,17 +96,7 @@ class ReviewsViewSet(ModelViewSet):
         return [IsAuthenticated()]
     
     
-class ProGoferViewSet(ModelViewSet):
-    queryset = ProGofer.objects.select_related('custom_user').all()
-    serializer_class = ProGoferSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['profession', 'hourly_rate', 'custom_user']
-    search_fields = ['profession', 'hourly_rate', 'custom_user']
-    permission_classes = [IsAuthenticated]
-    
-    def get_serializer_context(self):
-        currently_logged_in_user_id = self.request.user.id
-        return {'currently_logged_in_user_id': currently_logged_in_user_id}
+
     
     
 

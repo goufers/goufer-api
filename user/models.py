@@ -98,7 +98,7 @@ class Gofer(models.Model):
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    is_available  = models.BooleanField(default=False)
+    is_available  = models.BooleanField(default=True)
     avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     
     def __str__(self) -> str:
@@ -181,6 +181,7 @@ class ErrandBoy(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="errand_boy")
     mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Bicycle')
     charges = models.IntegerField(default=0)
+    is_available = models.BooleanField(default=True)
     
     def __str__(self) -> str:
         return f"Errandboy {self.user.first_name}"
@@ -200,15 +201,6 @@ class ProGofer(models.Model):
     def __str__(self):
         return f'{self.custom_user.first_name} - {self.profession}'
     
-    def set_unavailable_until(self, until_date):
-        self.is_available = False
-        self.available_until = until_date
-        self.save()
-        
-    def set_available(self):
-        self.is_available = True
-        self.available_until = None
-        self.save()
     
     
 class MessagePoster(models.Model):
