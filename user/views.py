@@ -276,8 +276,6 @@ class BookingViewSet(ModelViewSet):
     def accept_booking(self, request, pk):
         booking = Booking.objects.get(pk=pk)
         booking.status = 'accepted'
-        booking.pro_gofer.is_available = False
-        booking.pro_gofer.save()
         booking.save()
         serializer = self.get_serializer(booking)
         return Response(serializer.data)
@@ -286,7 +284,6 @@ class BookingViewSet(ModelViewSet):
     def decline_booking(self, request, pk):
         booking = Booking.objects.get(pk=pk)
         booking.status = 'declined'
-        booking.pro_gofer.is_available = True
         booking.pro_gofer.save()
         booking.save()
         serializer = self.get_serializer(booking)
