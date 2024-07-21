@@ -6,7 +6,7 @@ from datetime import datetime
 @shared_task
 def update_pro_gofers_availability_to_true_when_booking_end_time_expires():
     current_time = datetime.now().time().strftime('%H:%M:%S')
-    current_date = datetime.now().date()
+    current_date = datetime.now().strftime('%Y-%m-%d')
     bookings = Booking.objects.filter(status='accepted', scheduled_date=current_date, to_time__lt=current_time,)
     for booking in bookings: 
         booking.pro_gofer.is_available = True 
