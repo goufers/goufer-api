@@ -21,7 +21,7 @@ def make_pro_gofers_unavailable_based_on_bookings_start_datetime():
     bookings = Booking.objects.filter(status='accepted')
     for booking in bookings:
         scheduled_date = datetime.strptime(booking.scheduled_date, '%Y-%m-%d').date()
-        booking_start_time = datetime.strptime(booking.from_time, '%H:%M:%S').time()
+        booking_start_time = booking.from_time
         if scheduled_date == datetime.now().date() and booking_start_time == datetime.now().time().strftime('%H:%M:%S'):
             booking.pro_gofer.is_available = False 
             booking.pro_gofer.save()
