@@ -11,8 +11,11 @@ class Conversation(models.Model):
     vendor = models.ForeignKey(Vendor, related_name='chats', on_delete=models.CASCADE, null=True, blank=True)
     progofer = models.ForeignKey(ProGofer, related_name='chats', on_delete=models.CASCADE, null=True, blank=True)
     errand_boy=models.ForeignKey(ErrandBoy, related_name='chats', on_delete=models.CASCADE, null=True, blank=True)
+    payment_status = models.BooleanField(default=False)
+    payment_accepted = models.BooleanField(default=False)
     is_open = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
     def __str__(self) -> str:
@@ -39,5 +42,5 @@ class ChatMessage(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
     def __str__(self) -> str:
-        return f"Sent Message from {self.sender.username} at room_id {self.room.id}"
+        return f"Sent Message from {self.sender.first_name} at room_id {self.room.id}"
         

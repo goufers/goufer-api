@@ -16,9 +16,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
     permission_classes = [IsAuthenticated]
-    permission_classes = [IsAuthenticated]
+    
 
-    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+    
     @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
     def create_chat_room(self, request):
         user = request.user
@@ -77,7 +77,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         else:
             return Response({'error': 'Invalid parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
+    
     @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
     def chat_room(self, request, pk=None):
         chat_room = self.get_object()
@@ -85,12 +85,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 logger = logging.getLogger(__name__)
-logger = logging.getLogger(__name__)
+
 class ChatMessageViewSet(viewsets.ModelViewSet):
     queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
     permission_classes = [IsAuthenticated]
-    permission_classes = [IsAuthenticated]
+    
 
     def get_queryset(self):
         room_id = self.kwargs['conversation_pk']
@@ -99,6 +99,5 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         room_id = self.kwargs['conversation_pk']
         conversation = get_object_or_404(Conversation, pk=room_id)
-        logger.info(f"Saving message for room {room_id} and conversation {conversation.id}")
         logger.info(f"Saving message for room {room_id} and conversation {conversation.id}")
         serializer.save(room=conversation, sender=self.request.user)
