@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Avg
-
 from django.apps import apps
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -99,7 +98,7 @@ class Gofer(models.Model):
     bio = models.TextField(max_length=1024)
     sub_category = models.ForeignKey('main.SubCategory', on_delete=models.PROTECT, related_name='gofers', default=None)
     charges = models.IntegerField(default=0)
-    is_available  = models.BooleanField(default=False)
+    is_available  = models.BooleanField(default=True)
     avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     
     def __str__(self) -> str:
@@ -182,6 +181,7 @@ class ErrandBoy(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="errand_boy")
     mobility_means = models.CharField(max_length=20, choices=MOBILILTY_CHOICES, default='Bicycle')
     charges = models.IntegerField(default=0)
+    is_available = models.BooleanField(default=True)
     
     def __str__(self) -> str:
         return f"Errandboy {self.user.first_name}"
@@ -200,6 +200,7 @@ class ProGofer(models.Model):
 
     def __str__(self):
         return f'{self.custom_user.first_name} - {self.profession}'
+    
     
     
 class MessagePoster(models.Model):
@@ -222,7 +223,7 @@ class Schedule(models.Model):
         ('sun', 'Sunday'),
     ]
 
-    pro_gofer = models.OneToOneField(ProGofer, on_delete=models.CASCADE, related_name='schedule')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='schedules')
     day_of_week_available = models.CharField(max_length=10, choices=DAY_CHOICES)
     start_time_available = models.TimeField()
     end_time_available = models.TimeField()
@@ -232,5 +233,25 @@ class Schedule(models.Model):
 
     def __str__(self):
         return f"{self.pro_gofer.custom_user.first_name} is available on {self.day} from {self.start_time_available} to {self.end_time_available}"
+    
+class Booking(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    )
+    
+    scheduled_date = models.DateField()
+    from_time = models.TimeField()
+    to_time = models.TimeField()
+    purpose = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings_created')
+    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.scheduled_day} from {self.schedule.from_time} to {self.schedule.to_time}"
 
     

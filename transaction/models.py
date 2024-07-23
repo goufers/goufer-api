@@ -47,7 +47,6 @@ class Bank(models.Model):
         return f'{self.bank_name} - {self.account_number} ({self.custom_user.username})'
 
 
-
 def generate_hour_choices():
     hours = []
     for hour in range(0, 24):
@@ -55,21 +54,10 @@ def generate_hour_choices():
         hours.append((time_str, time_str))
     return hours
 
+    
 
+   
 
-
-class Booking(models.Model):
-    """User-Professional booking"""
-    BOOKING_CHOICES = [('Active', 'Active'), ('Terminated', 'Terminated'), ('Settled', 'Settled'), ('Pending Approval', 'Pending Approval')]
-    message_poster = models.ForeignKey(MessagePoster, on_delete=models.CASCADE, related_name='bookings')
-    pro_gofer = models.ForeignKey(ProGofer, on_delete=models.CASCADE, related_name='bookings')
-    duration = models.PositiveSmallIntegerField(_('How long in hours?'), default=1)
-    is_active = models.BooleanField(default=True)
-    status = models.CharField(max_length=20, choices=BOOKING_CHOICES, default='Pending Approval')
-    booked_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.message_poster.custom_user.first_name} booked {self.pro_gofer.custom_user.first_name} on {self.schedule.day} from {self.schedule.from_hour} to {self.schedule.to_hour}"
+    
 
 

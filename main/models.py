@@ -1,6 +1,6 @@
 from django.db import models
 from .validate import validate_file_size
-from user.models import Gofer, CustomUser, MessagePoster
+from user.models import Gofer, CustomUser, MessagePoster, ProGofer
 from django.core.validators import FileExtensionValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -87,20 +87,4 @@ def update_gofer_rating(sender, instance, **kwargs):
     
     
 
-###############################################TEST CODE################################
-
-class Booking(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('declined', 'Declined'),
-    )
-
-    expatriate_name = models.CharField(max_length=100)
-    date = models.DateField()
-    purpose = models.TextField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-
-    def __str__(self):
-        return f"{self.expatriate_name} - {self.date}"
 

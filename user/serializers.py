@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 
 from main.models import Address, Reviews
-from .models import CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
+from .models import Booking, CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
@@ -163,13 +163,40 @@ class ScheduleSerializer(serializers.ModelSerializer):
         user_id = self.context['pro_gofer_id']
         return Schedule.objects.create(pro_gofer_id=user_id, **validated_data)
 
+
+class MiniProGoferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProGofer
+        fields = ['id', 'profession', 'hourly_rate', 'is_available']
+        
+
+class ReadBookingSerializer(serializers.ModelSerializer):
+    pro_gofer = MiniProGoferSerializer(read_only=True)
+    class Meta:
+        model = Booking
+        fields = ['id', 'scheduled_date', 'from_time', 'to_time', 'purpose', 'status', 'message_poster', 'pro_gofer']
+        
+
+
+class UpdateBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['scheduled_date', 'from_time', 'to_time', 'purpose'] 
+ 
+ 
+class CreateAndDeleteBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = '__all__'
+        
     
 class ProGoferSerializer(serializers.ModelSerializer):
     custom_user = CustomUserSerializer(read_only=True)
-    schedule = ScheduleSerializer(read_only=True)
+    schedules = ScheduleSerializer(many=True, read_only=True)
+    bookings = ReadBookingSerializer(many=True, read_only=True)
     class Meta:
         model = ProGofer
-        fields = ['id', 'custom_user', 'bio', 'profession', 'hourly_rate', 'schedule']
+        fields = ['id', 'custom_user', 'bio', 'profession', 'hourly_rate', 'is_available', 'schedules', 'bookings']
     
     def create(self, validated_data):
         user_id = self.context['currently_logged_in_user_id']
@@ -244,6 +271,11 @@ class MessagePosterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
         return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
+    
+    
+
+        
+        
     
 
 
