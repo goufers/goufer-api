@@ -3,7 +3,7 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
 
-FROM python:3.12.4-alpine3.20
+FROM python:3.12.4-alpine
 
 
 # Prevents Python from writing pyc files.
@@ -24,9 +24,15 @@ ENV PYTHONUNBUFFERED=1
 # If the app is run as root, any vulnerability in the app can be exploited to gain access to the host system
 # It's a good practice to run the app as a non-root user
 
+RUN addgroup app && adduser -S -G app app
+
+
+# # set the user to run the app
+# USER app
+
 
 # set the working directory to /app
-WORKDIR /app
+# WORKDIR /app
 
 
 # Required to install mysqlclient with Pip
@@ -37,29 +43,30 @@ RUN apk update \
 
 # Install pipenv
 RUN pip install --upgrade pip 
-RUN pip install pipenv
+
 
 # copy pipfile and pipfile.lock to the working directory
 # This is done before copying the rest of the files to take advantage of Docker’s cache
 # If the pipfile and pipfile.lock files haven’t changed, Docker will use the cached dependencies
-COPY Pipfile Pipfile.lock /app/
+COPY ./requirements.txt /requirements.txt
+# COPY Pipfile Pipfile.lock /app/
 
 # We use the --system flag so packages are installed into the system python
 # and not into a virtualenv. Docker containers don't need virtual environments.
-RUN pipenv install --system --dev
+RUN pip install -r /requirements.txt
 
 # sometimes the ownership of the files in the working directory is changed to root
 # and thus the app can't access the files and throws an error -> EACCES: permission denied
 # to avoid this, change the ownership of the files to the root user
-USER root
+# USER root
 
 # change the ownership of the /app directory to the app user
 # chown -R <user>:<group> <directory>
 # chown command changes the user and/or group ownership of for given file.
-RUN chown -R app:app .
+# RUN chown -R app:app .
 
 # change the user back to the app user
-USER app
+# USER app
 
 # Copy the source code into the container's working directory
 COPY . .
@@ -69,3 +76,55 @@ EXPOSE 8000
 
 # command to run the app
 CMD [ "python", "manage.py", "runserver" ]  
+
+
+
+
+
+################# TEST CODE #################
+# set the base image to create the image for react app
+# FROM node:20-alpine
+
+# # create a user with permissions to run the app
+# # -S -> create a system user
+# # -G -> add the user to a group
+# # This is done to avoid running the app as root
+# # If the app is run as root, any vulnerability in the app can be exploited to gain access to the host system
+# # It's a good practice to run the app as a non-root user
+# RUN addgroup app && adduser -S -G app app
+
+# # set the user to run the app
+# USER app
+
+# # set the working directory to /app
+# WORKDIR /app
+
+# # copy package.json and package-lock.json to the working directory
+# # This is done before copying the rest of the files to take advantage of Docker’s cache
+# # If the package.json and package-lock.json files haven’t changed, Docker will use the cached dependencies
+# COPY package*.json ./
+
+# # sometimes the ownership of the files in the working directory is changed to root
+# # and thus the app can't access the files and throws an error -> EACCES: permission denied
+# # to avoid this, change the ownership of the files to the root user
+# USER root
+
+# # change the ownership of the /app directory to the app user
+# # chown -R <user>:<group> <directory>
+# # chown command changes the user and/or group ownership of for given file.
+# RUN chown -R app:app .
+
+# # change the user back to the app user
+# USER app
+
+# # install dependencies
+# RUN npm install
+
+# # copy the rest of the files to the working directory
+# COPY . .
+
+# # expose port 5173 to tell Docker that the container listens on the specified network ports at runtime
+# EXPOSE 5173
+
+# # command to run the app
+# CMD npm run dev

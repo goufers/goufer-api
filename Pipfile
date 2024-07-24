@@ -22,6 +22,9 @@ dj-database-url = "*"
 gunicorn = "*"
 django-heroku = "*"
 mysqlclient = "*"
+celery = "*"
+redis = "*"
+flower = "*"
 stripe = "*"
 
 [dev-packages]

@@ -1,14 +1,15 @@
 import re
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.db.models import Q
 from django.conf import settings
-
+from rest_framework.decorators import action
 from main.pagination import CustomPagination
-from .models import CustomUser, Gofer, Media, Schedule
+from .models import Booking, CustomUser, Gofer, Media, ProGofer, Schedule
 from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -19,7 +20,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView, DestroyAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer, ScheduleSerializer
+from .serializers import CreateAndDeleteBookingSerializer, GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, ProGoferSerializer, ReadBookingSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer, ScheduleSerializer, UpdateBookingSerializer
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
@@ -265,7 +266,51 @@ class ScheduleViewSet(ModelViewSet):
         return Schedule.objects.select_related('pro_gofer').filter(pro_gofer_id=self.kwargs['pro_gofer_pk'])
     
     def get_serializer_context(self):
-        return {'pro_gofer_id': self.kwargs['pro_gofer_pk'],}
+        return {'pro_gofer_id': self.kwargs['pro_gofer_pk']}
+    
+    
+class BookingViewSet(ModelViewSet):
+    queryset = Booking.objects.select_related('pro_gofer').select_related('message_poster').all()
+    permission_classes = [IsAuthenticated]
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ReadBookingSerializer
+        elif self.request.method == 'PUT':
+            return UpdateBookingSerializer
+        return CreateAndDeleteBookingSerializer
+    
+    @action(detail=True, methods=['post'])
+    def accept_booking(self, request, pk):
+        booking = Booking.objects.get(pk=pk)
+        booking.status = 'accepted'
+        booking.save()
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def decline_booking(self, request, pk):
+        booking = Booking.objects.get(pk=pk)
+        booking.status = 'declined'
+        booking.pro_gofer.save()
+        booking.save()
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data)
+
+
+class ProGoferViewSet(ModelViewSet):
+    queryset = ProGofer.objects.select_related('custom_user').all()
+    serializer_class = ProGoferSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['profession', 'hourly_rate', 'custom_user']
+    search_fields = ['profession', 'hourly_rate', 'custom_user']
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_context(self):
+        currently_logged_in_user_id = self.request.user.id
+        return {'currently_logged_in_user_id': currently_logged_in_user_id}
+    
+        
+        
     
     
 class UsersViewset(ModelViewSet):

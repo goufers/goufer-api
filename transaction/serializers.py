@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Wallet, Transaction, Bank, Booking
+from .models import Wallet, Transaction, Bank
 
 class WalletSerializer(serializers.ModelSerializer):
     """Users Wallet model serializer"""
@@ -30,25 +30,3 @@ class TransferFundsSerializer(serializers.Serializer):
     recipient = serializers.CharField(max_length=150)
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
-
-
-
-class BookingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Booking
-        fields = ['id', 'message_poster', 'pro_gofer', 'schedule', 'duration', 'is_active', 'status', 'comment', 'booked_at', 'updated_at']
-        read_only_fields = ['status', 'comment', 'booked_at', 'updated_at']
-
-    def create(self, validated_data):
-        message_poster = validated_data['message_poster']
-        pro_gofer = validated_data['pro_gofer']
-        schedule = validated_data['schedule']
-        duration = validated_data['duration']
-        total_cost = pro_gofer.hourly_rate * duration
-
-        if message_poster.wallet.balance >= total_cost:
-            message_poster.wallet.balance -= total_cost
-            message_poster.wallet.save()
-            return super().create(validated_data)
-        else:
-            raise serializers.ValidationError("Insufficient balance.")

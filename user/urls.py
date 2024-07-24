@@ -1,6 +1,6 @@
 from django.urls import path 
 from . import views, password_reset_views
-from rest_framework import routers
+from rest_framework_nested import routers
 
 urlpatterns = [
     path('logout/', views.logout_user, name='logout-user'),
@@ -17,7 +17,12 @@ router = routers.DefaultRouter()
 router.register('register', views.RegisterUserView, basename='register')
 router.register('login', views.LoginUserView, basename='login')
 router.register('message-posters', views.MessagePosterViewSet, basename='message-poster')
+router.register('pro-gofers', views.ProGoferViewSet, basename='pro-gofer')
+
+
+pro_gofer_router = routers.NestedDefaultRouter(router, 'pro-gofers', lookup='pro_gofer')
+pro_gofer_router.register('schedules', views.ScheduleViewSet, basename='pro_gofer_schedules')
 
 router.register('users', views.UsersViewset, basename='users')
 
-urlpatterns = urlpatterns + router.urls
+urlpatterns = urlpatterns + router.urls + pro_gofer_router.urls
