@@ -11,6 +11,7 @@ def update_pro_gofers_availability_to_true_when_booking_end_time_expires():
     for booking in bookings: 
         booking.pro_gofer.is_available = True 
         booking.pro_gofer.save()
+        booking.save()
        
             
         
@@ -25,6 +26,7 @@ def make_pro_gofers_unavailable_based_on_bookings_start_datetime():
         if scheduled_date == datetime.now().date() and booking_start_time == datetime.now().time().strftime('%H:%M:%S'):
             booking.pro_gofer.is_available = False 
             booking.pro_gofer.save()
+            booking.save()
                 
                 
                 

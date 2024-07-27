@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import django_heroku
+from celery.schedules import crontab
 
 
 load_dotenv()
@@ -206,11 +207,11 @@ LOGGING = {
 CELERY_BEAT_SCHEDULE = {
     'update_pro_gofers_availability_to_true_when_booking_end_time_expires': {
         'task': 'user.tasks.update_pro_gofers_availability_to_true_when_booking_end_time_expires',
-        'schedule': 10
+        'schedule': crontab(minute='*/1')
     },
     'make_pro_gofers_unavailable_based_on_bookings_start_datetime': {
         'task': 'user.tasks.make_pro_gofers_unavailable_based_on_bookings_start_datetime',
-        'schedule': 120
+        'schedule': crontab(minute='*/2')
     }
 }
 
