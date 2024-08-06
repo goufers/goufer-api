@@ -3,14 +3,16 @@ from celery import shared_task
 from datetime import datetime
 
 
+
 @shared_task
 def update_pro_gofers_availability_to_true_when_booking_end_time_expires():
+    current_date = datetime.now().date().strftime('%Y-%m-%d')
     current_time = datetime.now().time().strftime('%H:%M:%S')
-    current_date = datetime.now().strftime('%Y-%m-%d')
     bookings = Booking.objects.filter(status='accepted', scheduled_date=current_date, to_time__lt=current_time,)
     for booking in bookings: 
         booking.pro_gofer.is_available = True 
         booking.pro_gofer.save()
+       
        
             
         
@@ -18,13 +20,15 @@ def update_pro_gofers_availability_to_true_when_booking_end_time_expires():
     
 @shared_task     
 def make_pro_gofers_unavailable_based_on_bookings_start_datetime():
-    bookings = Booking.objects.filter(status='accepted')
+    current_date = datetime.now().date().strftime('%Y-%m-%d')
+    current_time = datetime.now().time().strftime('%H:%M:%S')
+    bookings = Booking.objects.filter(status='accepted', scheduled_date=current_date, from_time=current_time)
     for booking in bookings:
-        scheduled_date = datetime.strptime(booking.scheduled_date, '%Y-%m-%d').date()
-        booking_start_time = booking.from_time
-        if scheduled_date == datetime.now().date() and booking_start_time == datetime.now().time().strftime('%H:%M:%S'):
-            booking.pro_gofer.is_available = False 
-            booking.pro_gofer.save()
+        booking.pro_gofer.is_available = False 
+        booking.pro_gofer.save()
+            
+
+            
                 
                 
                 
