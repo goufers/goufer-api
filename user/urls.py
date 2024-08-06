@@ -11,6 +11,7 @@ urlpatterns = [
     path('password_reset_confirm/<uid>/<token>/', password_reset_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('toggle-available/', views.ToggleAvailability, name='toggle_available'),
     path('me/', views.CurrentUserRetrieveView.as_view(), name='logged_in_gofer'),
+    path('update-profile-picture/', views.UpdateProfilePicture.as_view(), name='profile_picture_update'),
 ]
 
 router = routers.DefaultRouter()
@@ -24,5 +25,6 @@ pro_gofer_router = routers.NestedDefaultRouter(router, 'pro-gofers', lookup='pro
 pro_gofer_router.register('schedules', views.ScheduleViewSet, basename='pro_gofer_schedules')
 
 router.register('users', views.UsersViewset, basename='users')
+profile_picture_router = routers.NestedDefaultRouter(router, 'users', lookup="users")
 
-urlpatterns = urlpatterns + router.urls + pro_gofer_router.urls
+urlpatterns = urlpatterns + router.urls + pro_gofer_router.urls + profile_picture_router.urls

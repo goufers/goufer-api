@@ -60,7 +60,6 @@ class CustomUser(AbstractUser):
     username = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
     phone_number = models.CharField(max_length=30, unique=True, db_index=True)
-    profile_picture = models.ImageField(upload_to='files/dp', null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
     location = models.ForeignKey("main.Location", on_delete=models.CASCADE, blank=True, null=True)
     address = models.ForeignKey("main.Address", on_delete=models.CASCADE, blank=True, null=True)
@@ -76,12 +75,6 @@ class CustomUser(AbstractUser):
     
     def __str__(self) -> str:
         return self.email
-    
-    # def save(self, *args, **kwargs):
-    #     if not self.address:
-    #         Address = apps.get_model('main', 'Address')
-    #         self.address = Address.objects.create()  # Create a default Address
-    #     super().save(*args, **kwargs)
         
 @receiver(post_save, sender=CustomUser)
 def create_default_address(sender, instance, created, **kwargs):
@@ -89,6 +82,14 @@ def create_default_address(sender, instance, created, **kwargs):
         Address = apps.get_model('main', 'Address')
         instance.address = Address.objects.create()
         instance.save()
+        
+
+class ProfilePicture(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='user_profile_picture')
+    image = models.ImageField(upload_to='files/dp', null=True, blank=True)
+    
+    def __str__(self) -> str:
+        return self.image
 
 
 class Gofer(models.Model):

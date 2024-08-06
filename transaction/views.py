@@ -7,13 +7,12 @@ from django.shortcuts import get_object_or_404
 from .models import Wallet, Transaction, Bank, ProGofer, MessagePoster
 from .serializers import BankSerializer, FundWalletSerializer, TransferFundsSerializer, TransactionSerializer 
 from .models import (
-    StripeUser, Wallet, Transaction, Bank, ProGofer, Booking, MessagePoster
+    StripeUser, Wallet, Transaction, Bank, ProGofer, MessagePoster
     )
 
 from .serializers import (
     BankSerializer, 
     FundWalletSerializer, TransferFundsSerializer,
-    BookingSerializer,
     TransactionSerializer
     )
 import requests
@@ -21,7 +20,7 @@ from decimal import Decimal
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from user.models import CustomUser, Gofer, Schedule
+from user.models import Booking, CustomUser, Gofer, Schedule
 from django.db.models import Count
 import stripe
 from django.urls import reverse
@@ -160,91 +159,92 @@ class TransactionListView(APIView):
 
 
 
-class BookingCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+# class BookingCreateView(APIView):
+#     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        message_poster = request.user
-        pro_gofer = get_object_or_404(ProGofer, pk=request.data.get('gofer_id'))
-        schedule = get_object_or_404(Schedule, pk=request.data.get('schedule_id'))
-        duration = int(request.data.get('duration', 1))
+#     def post(self, request, *args, **kwargs):
+#         message_poster = request.user
+#         pro_gofer = get_object_or_404(ProGofer, pk=request.data.get('gofer_id'))
+#         schedule = get_object_or_404(Schedule, pk=request.data.get('schedule_id'))
+#         duration = int(request.data.get('duration', 1))
 
-        data = {
-            'message_poster': message_poster.id,
-            'pro_gofer': pro_gofer.id,
-            'schedule': schedule.id,
-            'duration': duration
-        }
+#         data = {
+#             'message_poster': message_poster.id,
+#             'pro_gofer': pro_gofer.id,
+#             'schedule': schedule.id,
+#             'duration': duration
+#         }
 
-        serializer = BookingSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class BookingListView(generics.ListAPIView):
-    """List Bookings for a given progofer"""
-    permission_classes = [IsAuthenticated]
-    serializer_class = BookingSerializer
-
-    def get_queryset(self):
-        if isinstance(self.request.user, MessagePoster):
-            return Booking.objects.filter(message_poster=self.request.user)
-        return Booking.objects.filter(pro_gofer=self.kwargs.get('pk'))
+#         serializer = BookingSerializer(data=data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BookingUpdateView(generics.UpdateAPIView):
-    queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated]
+# class BookingListView(generics.ListAPIView):
+#     """List Bookings for a given progofer"""
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = BookingSerializer
 
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user, status='Pending')
-
-
-class BookingCancelView(generics.DestroyAPIView):
-    queryset = Booking.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user, status='Pending')
-
-    def perform_destroy(self, instance):
-        instance.status = 'Terminated'
-        instance.save()
+#     def get_queryset(self):
+#         if isinstance(self.request.user, MessagePoster):
+#             return Booking.objects.filter(message_poster=self.request.user)
+#         return Booking.objects.filter(pro_gofer=self.kwargs.get('pk'))
 
 
-class BookingAcceptView(APIView):
-    permission_classes = [IsAuthenticated]
+# class BookingUpdateView(generics.UpdateAPIView):
+#     queryset = Booking.objects.all()
+#     serializer_class = BookingSerializer
+#     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
-        if booking.gofer.user == request.user:
-            booking.status = 'Accepted'
-            booking.save()
-            return Response({'status': 'Booking accepted.'}, status=status.HTTP_200_OK)
-        return Response({'error': 'You are not authorized to accept this booking.'}, status=status.HTTP_403_FORBIDDEN)
+#     def get_queryset(self):
+#         return Booking.objects.filter(user=self.request.user, status='Pending')
 
 
-class BookingDeclineView(APIView):
-    permission_classes = [IsAuthenticated]
+# class BookingCancelView(generics.DestroyAPIView):
+#     queryset = Booking.objects.all()
+#     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
-        comment = request.data.get('comment', '')
-        if booking.gofer.user == request.user:
-            booking.status = 'Declined'
-            booking.comment = comment
-            booking.save()
-            return Response({'status': 'Booking declined.'}, status=status.HTTP_200_OK)
-        return Response({'error': 'You are not authorized to decline this booking.'}, status=status.HTTP_403_FORBIDDEN)
+#     def get_queryset(self):
+#         return Booking.objects.filter(user=self.request.user, status='Pending')
+
+#     def perform_destroy(self, instance):
+#         instance.status = 'Terminated'
+#         instance.save()
+
+
+# class BookingAcceptView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
+#         if booking.gofer.user == request.user:
+#             booking.status = 'Accepted'
+#             booking.save()
+#             return Response({'status': 'Booking accepted.'}, status=status.HTTP_200_OK)
+#         return Response({'error': 'You are not authorized to accept this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+# class BookingDeclineView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         booking = get_object_or_404(Booking, pk=request.data.get('booking_id'))
+#         comment = request.data.get('comment', '')
+#         if booking.gofer.user == request.user:
+#             booking.status = 'Declined'
+#             booking.comment = comment
+#             booking.save()
+#             return Response({'status': 'Booking declined.'}, status=status.HTTP_200_OK)
+#         return Response({'error': 'You are not authorized to decline this booking.'}, status=status.HTTP_403_FORBIDDEN)
 
 class CreatePaymentIntentView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             user = request.user
             amount = request.data.get('amount')
+            currency = request.data.get('currency')
             stripe_user = StripeUser.objects.get(user=user)
             if stripe_user.stripe_id is None:
                 customer = stripe.Customer.create(
@@ -260,7 +260,7 @@ class CreatePaymentIntentView(APIView):
             intent = stripe.PaymentIntent.create(
                 customer=user.stripe_user.stripe_id,
                 amount=int(float(amount) * 100),
-                currency='usd',
+                currency=currency,
                 automatic_payment_methods={
                     'enabled': True
                     },
@@ -276,7 +276,9 @@ class ConfirmPaymentIntentView(APIView):
             payment_intent_id = request.data.get('payment_intent_id')
             payment_intent = stripe.PaymentIntent.confirm(
                 payment_intent_id,
-                return_url=request.build_absolute_uri(reverse("fund_wallet"))
+                payment_method=request.data.get('payment_method_id'),
+                return_url=request.build_absolute_uri(reverse("fund_wallet")),
+                receipt_email=request.user.email
             )
             if payment_intent.status == 'succeeded':
                 user = request.user
