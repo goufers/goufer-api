@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import Bank, StripeUser, Wallet, Transaction, ProGofer
 from .models import Bank, Wallet, Transaction, ProGofer
 
 
@@ -16,9 +17,8 @@ class WalletAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ['wallet', 'amount', 'transaction_type', 'created_at']
-    search_fields = ['wallet', 'amount', 'transaction_type']
-    list_filter = ['created_at']
+    list_display = ['payment_id', 'amount', 'created_at']
+    list_filter = ['payment_id','created_at']
     list_select_related = ['wallet']
     list_per_page = 10
 
@@ -36,3 +36,4 @@ admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Wallet, WalletAdmin)
 admin.site.register(Bank, BankAdmin)
 
+admin.site.register(StripeUser)

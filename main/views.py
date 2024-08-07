@@ -87,7 +87,7 @@ class ReviewsViewSet(ModelViewSet):
     serializer_class = ReviewsSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['user_id', 'gofer_id', 'rating']
+    filterset_fields = ['message_poster', 'gofer_id', 'rating']
     search_fields = ['gofer_id', 'rating']
     
     def get_permissions(self):
