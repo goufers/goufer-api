@@ -1,8 +1,10 @@
 import re
+from django.db import IntegrityError
+from django.http import JsonResponse
 from rest_framework import serializers
 
 from main.models import Address, Reviews
-from .models import Booking, CustomUser, Gofer, MessagePoster, Schedule, Vendor, ErrandBoy, ProGofer, Media
+from .models import Booking, CustomUser, Gofer, MessagePoster, ProfilePicture, Schedule, Vendor, ErrandBoy, ProGofer, Media
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.core.mail import EmailMultiAlternatives
@@ -96,14 +98,35 @@ class MediaSerializer(serializers.ModelSerializer):
         vendor = self.context['request'].user.vendor
         return Media.objects.create(vendor=vendor, media=validated_data['media'])
         
+class UpdateProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfilePicture
+        fields = ['image']
+        
 class CustomUserSerializer(serializers.ModelSerializer):
+    user_profile_picture = UpdateProfilePictureSerializer(read_only=True)
     address = AddressSerializer()
     location = LocationSerializer(read_only=True)
     documents = DocumentSerializer(many=True, read_only=True)
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'phone_number', 'first_name', 'last_name', 'gender', 'location', 'address', 'documents', 'date_joined', 'phone_verified', 'email_verified']
-        read_only_fields = ['phone_verified', 'email_verified', 'email', 'phone_number', 'email', 'date_joined']  
+        fields = ['id', 'user_profile_picture', 'email', 'phone_number', 'first_name', 'last_name', 'gender', 'location', 'address', 'documents', 'date_joined', 'phone_verified', 'email_verified']
+        read_only_fields = ['phone_verified', 'email_verified', 'email', 'phone_number', 'email', 'date_joined']
+        
+    def update(self, instance, validated_data):
+        address_data = validated_data.pop('address')
+        address = instance.address
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.save()
+        address.house_number = address_data['house_number']
+        address.street = address_data['street']
+        address.city = address_data['city']
+        address.state = address_data['state']
+        address.country = address_data['country']
+        address.save()
+        return instance
 
 class GoferCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -120,7 +143,8 @@ class GoferSerializer(serializers.ModelSerializer):
     gofer_reviews = ReviewsSerializer(many=True, read_only=True)
     class Meta:
         model = Gofer
-        fields = ['custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'gofer_reviews']
+        fields = ['custom_user', 'expertise', 'mobility_means', 'bio', 'sub_category', 'charges', 'gofer_reviews', 'avg_rating', 'is_available']
+        read_only_fields = ['is_available', 'avg_rating']
         
     def update(self, instance, validated_data):
         custom_user_data = validated_data.pop('custom_user')
@@ -141,9 +165,6 @@ class GoferSerializer(serializers.ModelSerializer):
         custom_user.gender = custom_user_data.get('gender', custom_user.gender)
         custom_user.location = custom_user_data.get('location', custom_user.location)
         address_data = custom_user_data.get('address', custom_user.address)
-        print(address)
-        print(address_data)
-        print(custom_user.address)
         address.house_number = address_data['house_number']
         address.street = address_data['street']
         address.city = address_data['city']
@@ -207,7 +228,7 @@ class VendorCreateSerializer(serializers.ModelSerializer):
         model = Vendor
         fields = [
             'business_name', 'website', 'bio', 'facebook', 'twitter',
-            'instagram', 'linkedin', 'category'
+            'instagram', 'linkedin', 'sub_category'
         ]
     def create(self, validated_data):
         custom_user = self.context['request'].user
@@ -216,6 +237,8 @@ class VendorCreateSerializer(serializers.ModelSerializer):
         
 class VendorSerializer(serializers.ModelSerializer):
     vendor_media = MediaSerializer(many=True, read_only=True)
+    custom_user = CustomUserSerializer()
+    sub_category = SubCategorySerializer(read_only=True)
     class Meta:
         model = Vendor
         fields = "__all__"
@@ -271,12 +294,5 @@ class MessagePosterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         currently_logged_in_user_id = self.context["currently_logged_in_user"]
         return MessagePoster.objects.create(custom_user_id=currently_logged_in_user_id)
-    
-    
-
-        
-        
-    
-
 
         

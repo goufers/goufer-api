@@ -25,9 +25,8 @@ class Wallet(models.Model):
 
 class Transaction(models.Model):
     """Users Transaction model"""
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions", default=None)
+    payment_id = models.CharField(max_length=20, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_type = models.CharField(max_length=10, choices=[('deposit', 'Deposit'), ('withdrawal', 'Withdrawal'), ('transfer', 'Transfer')])
     created_at = models.DateTimeField(auto_now_add=True)
 
     def _str_(self):
@@ -60,4 +59,14 @@ def generate_hour_choices():
 
     
 
+class StripeUser(models.Model):
+    """User's Stripe Customer ID"""
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="stripe_user")
+    stripe_id = models.CharField(max_length=30, blank=True, null=True)
+    
+    def __str__(self) -> str:
+        if self.stripe_id is None:
+            return self.user.email
+        return self.stripe_id
+    
 
