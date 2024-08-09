@@ -4,9 +4,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from user.models import CustomUser, Gofer, Vendor, ProGofer, ErrandBoy, MessagePoster
+from user.models import CustomUser, Gofer, Vendor, ProGofer, ErrandBoy
 from chat.models import Conversation, ChatMessage
-from main.models import Category, SubCategory
+from main.models import MessagePoster, Category, SubCategory
 
 class ChatAPITestCase(APITestCase):
     def setUp(self):
