@@ -103,7 +103,7 @@ class Gofer(models.Model):
     avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
     
     def __str__(self) -> str:
-        return f"Gofer {self.custom_user.email}"
+        return f"Gofer {self.custom_user.first_name}"
     
     def update_rating(self):
         reviews = self.gofer_reviews.all()

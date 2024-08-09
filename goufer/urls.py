@@ -30,7 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/users/', include('user.urls')),
     path('api/v1/main/', include('main.urls')),
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
     path("api/v1/chat/", include("chat.urls")),
     path('api/v1/users/transaction/', include('transaction.urls')),
     path('', include(chat.routing.websocket_urlpatterns)), 
