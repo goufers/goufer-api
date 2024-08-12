@@ -25,6 +25,8 @@ mysqlclient = "*"
 celery = "*"
 flower = "*"
 redis = "==5.0.6"
+stripe = "*"
+smile-id-core = "*"
 
 [dev-packages]
 pytest = "*"
