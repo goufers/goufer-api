@@ -1,20 +1,16 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested.routers import NestedDefaultRouter
 from .views import ConversationViewSet, ChatMessageViewSet
 
-# Create the main router
+# Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'conversation', ConversationViewSet, basename='conversation')
+router.register(r'conversations', ConversationViewSet, basename='conversation')
 
-# Create a nested router
-conversation_router = NestedDefaultRouter(router, r'conversation', lookup='conversation')
-conversation_router.register(r'messages', ChatMessageViewSet, basename='conversation-messages')
+# Register the ChatMessageViewSet with a nested route
+conversations_router = DefaultRouter()
+conversations_router.register(r'conversations/(?P<conversation_pk>\d+)/messages', ChatMessageViewSet, basename='chatmessage')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('', include(conversation_router.urls)),
-    
-    
-    
+    path('', include(conversations_router.urls)),  # Ensure this is included to handle nested URLs
 ]

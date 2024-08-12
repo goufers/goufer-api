@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.conf import settings
 from rest_framework.decorators import action
 from main.pagination import CustomPagination
-from .models import Booking, CustomUser, Gofer, Media, ProGofer, Schedule
+from .models import Booking, CustomUser, Gofer, Media, ProGofer, ProfilePicture, Schedule
 from main.models import MessagePoster
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -17,18 +17,20 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from main.serializers import LocationSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .serializers import CreateAndDeleteBookingSerializer, GoferCreateSerializer, LoginUserSerializer, MediaSerializer, MessagePosterSerializer, ProGoferSerializer, ReadBookingSerializer, RegisterCustomUserSerializer, GoferSerializer, CustomUserSerializer, ScheduleSerializer, UpdateBookingSerializer
+from .serializers import (
+    CreateAndDeleteBookingSerializer, GoferCreateSerializer, LoginUserSerializer, MediaSerializer, 
+    MessagePosterSerializer, ProGoferSerializer, ReadBookingSerializer, RegisterCustomUserSerializer, 
+    GoferSerializer, CustomUserSerializer, ScheduleSerializer, UpdateBookingSerializer, UpdateProfilePictureSerializer
+)
 from . import utils
 from .filters import GoferFilterSet
 from .decorators import phone_unverified
-from transaction.models import Wallet
+from transaction.models import StripeUser, Wallet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.views import APIView
-
 
 class RegisterUserView(ModelViewSet):
     ''' 
@@ -54,6 +56,10 @@ class RegisterUserView(ModelViewSet):
                 wallet.save()
                 message_poster = MessagePoster.objects.create(custom_user=user)
                 message_poster.save()
+                stripe_user = StripeUser.objects.create(user=user)
+                stripe_user.save()
+                profile_picture = ProfilePicture.objects.create(user=user)
+                profile_picture.save()
                 refresh = RefreshToken.for_user(user)
                 return_message['refresh'] = str(refresh)
                 return_message['access'] = str(refresh.access_token)
@@ -217,19 +223,24 @@ def ToggleAvailability(request):
     except ObjectDoesNotExist:
         return Response({'error': 'This user is not a Gofer'})
     
-class CurrentUserView(RetrieveAPIView):
+class CurrentUserRetrieveView(RetrieveAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+    
+class CurrentUserUpdateView(UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomUserSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return user
 
 class MediaViewset(ModelViewSet):
     serializer_class = MediaSerializer
     queryset = Media.objects.all()
-    def get_queryset(self):
-        vendor_id = self.kwargs['vendor_pk']
-        return Media.objects.filter(vendor__id=vendor_id)
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -305,3 +316,27 @@ class ProGoferViewSet(ModelViewSet):
         
         
     
+    
+class UsersViewset(ModelViewSet):
+    serializer_class = CustomUserSerializer
+    queryset = CustomUser.objects.all()
+    http_method_names = ['get', 'put', 'delete', 'patch']
+    
+    def update(self, request, *args, **kwargs):
+        if int(self.kwargs['pk']) != request.user.id:
+            return Response({"detail":"You are not this user"}, status=status.HTTP_401_UNAUTHORIZED)
+        return super().update(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action in ['retrieve', 'list']:
+            permission_classes =  [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+class UpdateProfilePicture(UpdateAPIView):
+    serializer_class = UpdateProfilePictureSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return ProfilePicture.objects.get(user=self.request.user)
