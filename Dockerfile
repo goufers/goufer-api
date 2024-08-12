@@ -1,6 +1,4 @@
 FROM python:3.12.4-alpine 
-
-
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -32,10 +30,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
+ENV SECRET_KEY ='django-insecure-+p*dvp7+2g2n2u-6ahklub4fvyvuy!@-q1qgf@$mx(dar6b(hb'
+ENV account_sid ='AC937c61635a10f65f9b650cf217183884' 
+ENV service_sid='VAff9f2f3279b1fc3d33fbc77d4a573f9d'
+ENV auth_token='d7b4fe1e71ab31aa3ff7c895afd15d9e'
+ENV EMAIL_HOST_USER='jamesezekiel039@gmail.com'
+ENV EMAIL_HOST_PASSWORD='wfhi ndom udcd mtrb'
+ENV DEFAULT_FROM_EMAIL='jamesezekiel039@gmail.com'
+
 RUN addgroup app && adduser -S -G app app
 
-# set the user to run the app
+RUN chown -R app:app .
+
 USER app
 
-# Expose port 8000 on the container
 EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver"]

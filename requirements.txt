@@ -79,7 +79,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.1
 # This package should be removed when building the image coz its not needed for linux environments
-pywin32==306
+# pywin32==306
 pyzmq==26.0.3
 redis==5.0.6
 requests==2.32.3
@@ -93,7 +93,7 @@ tornado==6.4.1
 twilio==9.2.3
 Twisted==24.7.0
 # this package should be removed when building the image coz its not needed for linux environments
-twisted-iocpsupport==1.0.4
+# twisted-iocpsupport==1.0.4
 txaio==23.1.1
 types-requests==2.32.0.20240712
 typing_extensions==4.12.2
