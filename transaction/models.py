@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Wallet(models.Model):
-    ''' Wallet and transaction models '''
     custom_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='wallet')
     transaction_pin = models.CharField(max_length=4, blank=True, null=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -24,7 +23,6 @@ class Wallet(models.Model):
 
 
 class Transaction(models.Model):
-    """Users Transaction model"""
     payment_id = models.CharField(max_length=20, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,7 +32,6 @@ class Transaction(models.Model):
     
     
 class Bank(models.Model):
-    """Users Bank information for withdrawals"""
     custom_user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='transfer_recipient')
     recipient_code = models.CharField(max_length=100, unique=True, null=True, blank=True)
     bank_name = models.CharField(max_length=100)
