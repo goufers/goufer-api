@@ -80,7 +80,7 @@ class FundWalletView(APIView):
             wallet.save()
             Transaction.objects.create(wallet=wallet, amount=amount, transaction_type='deposit')
             return Response({'success': True,
-                             'user': request.user.username,
+                             'user_email': request.user.email,
                              'amount': amount}, status=status.HTTP_201_CREATED)
 
 
