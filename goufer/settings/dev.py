@@ -1,5 +1,6 @@
 from .common import *
 
+load_dotenv()
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -13,8 +14,12 @@ DEBUG = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'goufer_db',
+        'USER': os.getenv('MY_SQL_HOST_USER'),
+        'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
+        'HOST': 'mysql-container',
+        'PORT': '3306'
     }
 }
 

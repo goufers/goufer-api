@@ -1,49 +1,56 @@
-FROM python:3.12.4-alpine 
-# Prevents Python from writing pyc files.
-ENV PYTHONDONTWRITEBYTECODE=1
+# Use the official Python image.
+# https://hub.docker.com/_/python
+FROM python:3.10-slim
 
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# # set the working directory to /app
+# Install system dependencies required for mysqlclient, psycopg2, and other packages
+RUN apt-get update && \
+    apt-get install -y \
+    gcc \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    pkg-config \
+    curl \
+    && apt-get clean
+
+# Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apk update && apk add --no-cache \
-    python3-dev \
-    build-base \
-    mysql-client \
-    mysql-dev \
-    postgresql-dev \
-    libffi-dev \
-    gcc \
-    musl-dev
+# Install Python dependencies
+COPY requirements.txt /app/
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
-RUN pip install --upgrade pip 
-
-COPY Pipfile Pipfile.lock /app/
-
-COPY ./requirements.txt /app/
-
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Copy the entire project into the container
 COPY . /app/
 
-ENV SECRET_KEY ='django-insecure-+p*dvp7+2g2n2u-6ahklub4fvyvuy!@-q1qgf@$mx(dar6b(hb'
-ENV account_sid ='AC937c61635a10f65f9b650cf217183884' 
-ENV service_sid='VAff9f2f3279b1fc3d33fbc77d4a573f9d'
-ENV auth_token='d7b4fe1e71ab31aa3ff7c895afd15d9e'
-ENV EMAIL_HOST_USER='jamesezekiel039@gmail.com'
-ENV EMAIL_HOST_PASSWORD='wfhi ndom udcd mtrb'
-ENV DEFAULT_FROM_EMAIL='jamesezekiel039@gmail.com'
+COPY .env /app/
 
-RUN addgroup app && adduser -S -G app app
+# Set environment variables for Django
+ENV DJANGO_SETTINGS_MODULE=goufer.settings.dev
+ENV PORT 8080
 
-RUN chown -R app:app .
+# Create a non-root user and group, and switch to it
+RUN addgroup --system app && adduser --system --ingroup app app
 
+# Change ownership of the app directory to the app user and group
+RUN chown -R app:app /app
+
+# Switch to the non-root user
 USER app
 
-EXPOSE 8000
+# Collect static files
+RUN python manage.py collectstatic --noinput
 
-CMD ["python", "manage.py", "runserver"]
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Health check for MySQL
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD mysqladmin ping -h db_host || exit 1
+
+
+# Start the application using Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "goufer.wsgi:application"]
