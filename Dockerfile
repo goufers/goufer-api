@@ -27,8 +27,6 @@ RUN pip install --upgrade pip && \
 # Copy the entire project into the container
 COPY . /app/
 
-COPY .env /app/
-
 # Set environment variables for Django
 ENV DJANGO_SETTINGS_MODULE=goufer.settings.dev
 ENV PORT 8080

@@ -12,17 +12,7 @@ DEBUG = True
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-if not DEBUG:
-    DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'goufer-db',
-        'USER': os.getenv('MY_SQL_HOST_USER'),
-        'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
-        'HOST': '/cloudsql/goufer-backend:us-central1:goufer-db',
-        'PORT': '3306'
-    }
-}
+
     
 DATABASES = {
     'default': {
@@ -30,7 +20,7 @@ DATABASES = {
         'NAME': 'goufer-db',
         'USER': os.getenv('MY_SQL_HOST_USER'),
         'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
-        'HOST': 'localhost',
+        'HOST': '/cloudsql/goufer-backend:us-central1:goufer-db',
         'PORT': '3306'
     }
 }
