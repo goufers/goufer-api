@@ -12,16 +12,29 @@ DEBUG = True
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
+if not DEBUG:
+    DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'goufer_db',
+        'NAME': 'goufer-db',
         'USER': os.getenv('MY_SQL_HOST_USER'),
         'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
-        'HOST': 'mysql-container',
+        'HOST': '/cloudsql/goufer-backend:us-central1:goufer-db',
         'PORT': '3306'
     }
 }
+    
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'goufer-db',
+        'USER': os.getenv('MY_SQL_HOST_USER'),
+        'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
+        'HOST': 'localhost',
+        'PORT': '3306'
+    }
+}
+
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
