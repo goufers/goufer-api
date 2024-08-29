@@ -13,9 +13,10 @@ DEBUG = False
 ALLOWED_HOSTS = ['goufer-616dedbb12a3.herokuapp.com']
 
 
-DATABASES = {
-    'default': dj_database_url.config()
-}
+# DATABASES = {
+#     'default': dj_database_url.config()
+# }
+
 
 CELERY_BROKER_URL = os.environ.get('REDIS_URL')
 
