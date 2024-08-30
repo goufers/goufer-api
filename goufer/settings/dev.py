@@ -17,10 +17,10 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'goufer-db',
+        'NAME': 'goufer_db',
         'USER': os.getenv('MY_SQL_HOST_USER'),
         'PASSWORD': os.getenv('MY_SQL_PASSWORD'),
-        'HOST': '/cloudsql/goufer-backend:us-central1:goufer-db',
+        'HOST': '127.0.0.1',
         'PORT': '3306'
     }
 }
